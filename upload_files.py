@@ -3,7 +3,7 @@ import json
 import time
 import os
 
-from helpers import read_arg;
+from helpers import read_arg, log, timestamp_to_date
 
 def file_exists_and_changed(last_check, file):
     if not os.path.isfile(file):
@@ -34,6 +34,7 @@ config['last-check'] = int(time.time())
 update_config('config.json', config)
 
 target_dir = config['target']
+log(f'{timestamp_to_date(time.time())} Target \"{target_dir}\"')
 files = config['registry']
 
 for file in files:
@@ -42,9 +43,6 @@ for file in files:
     target_file = target_dir + name
     if file_exists_and_changed(last_check, path):
         copyfile(path, target_file)
-        print(f'File \"{name}\" was updated.')
+        log(f'File \"{name}\" updated.')
     else:
-        print(f'File \"{name}\" already uptodate.')
-
-
-print()
+        log(f'File \"{name}\" already uptodate.')

@@ -3,6 +3,8 @@ import json
 import time
 import os
 
+from helpers import read_arg;
+
 def file_exists_and_changed(last_check, file):
     if not os.path.isfile(file):
         return False
@@ -23,7 +25,10 @@ def update_config(file, config):
     f.write(out)
     f.close()
 
-config = read_config('config.json')
+
+config_file = read_arg('config-file') or 'config.json'
+config = read_config(config_file)
+
 last_check = config['last-check'] if 'last-check' in config else 0
 config['last-check'] = int(time.time())
 update_config('config.json', config)

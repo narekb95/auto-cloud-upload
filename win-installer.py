@@ -2,6 +2,7 @@ import winreg
 import subprocess
 import os
 import sys
+import ctypes
 
 file_path = os.path.realpath(__file__)
 dir_path = os.path.dirname(file_path)

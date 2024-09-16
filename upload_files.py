@@ -29,27 +29,25 @@ try:
 
     config_file = read_arg('config-file', argv)
     if config_file is None:
-        print('Config file not provided.')
         raise Exception('Config file not provided.')
+    
     config = read_config(config_file)
-
-    last_check = config['last-check'] if 'last-check' in config else 0
-    config['last-check'] = int(time.time())
-    update_config('config.json', config)
-
     target_dir = config['target']
-    log(f'{timestamp_to_date(time.time())} Target \"{target_dir}\"')
     files = config['registry']
+    curr_timestamp = int(time.time())
 
     for file in files:
         path = file['path']
         name = file['name']
+        last_update = file['last-update'] if 'last-update' in file else 0
         target_file = target_dir + name
-        if file_exists_and_changed(last_check, path):
+        if file_exists_and_changed(last_update, path):
             copyfile(path, target_file)
-            log(f'File \"{name}\" updated.')
-        else:
-           log(f'File \"{name}\" already uptodate.')
+            file['last-update'] = curr_timestamp
+            print(f'File {name} updated.')
+        else: 
+            print(f'File {name} uptodate.')
+    
+    update_config(config_file, config)
 except Exception as e:
     print(f'Error: {e}')
-input("Press enter to continue...")

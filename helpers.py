@@ -2,7 +2,7 @@ import datetime
 def read_arg(target : str, argv):
     # Read the parameters of syntax --arg=value
     # and return the value
-    arg =  next(a for a in argv if a.startswith('--') and a[2:2 + len(target)] == target)
+    arg =  next((a for a in argv if a.startswith('--') and a[2:2 + len(target)] == target), None)
     return arg.split('=')[1] if arg != None else None
 
 def log(s):

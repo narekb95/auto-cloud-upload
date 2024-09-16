@@ -1,10 +1,10 @@
+from sys import argv
 from shutil import copyfile
 import json
 import time
 import os
 
 from helpers import read_arg, log, timestamp_to_date
-
 def file_exists_and_changed(last_check, file):
     if not os.path.isfile(file):
         return False
@@ -25,24 +25,31 @@ def update_config(file, config):
     f.write(out)
     f.close()
 
+try:
 
-config_file = read_arg('config-file') or 'config.json'
-config = read_config(config_file)
+    config_file = read_arg('config-file', argv)
+    if config_file is None:
+        print('Config file not provided.')
+        raise Exception('Config file not provided.')
+    config = read_config(config_file)
 
-last_check = config['last-check'] if 'last-check' in config else 0
-config['last-check'] = int(time.time())
-update_config('config.json', config)
+    last_check = config['last-check'] if 'last-check' in config else 0
+    config['last-check'] = int(time.time())
+    update_config('config.json', config)
 
-target_dir = config['target']
-log(f'{timestamp_to_date(time.time())} Target \"{target_dir}\"')
-files = config['registry']
+    target_dir = config['target']
+    log(f'{timestamp_to_date(time.time())} Target \"{target_dir}\"')
+    files = config['registry']
 
-for file in files:
-    path = file['path']
-    name = file['name']
-    target_file = target_dir + name
-    if file_exists_and_changed(last_check, path):
-        copyfile(path, target_file)
-        log(f'File \"{name}\" updated.')
-    else:
-        log(f'File \"{name}\" already uptodate.')
+    for file in files:
+        path = file['path']
+        name = file['name']
+        target_file = target_dir + name
+        if file_exists_and_changed(last_check, path):
+            copyfile(path, target_file)
+            log(f'File \"{name}\" updated.')
+        else:
+           log(f'File \"{name}\" already uptodate.')
+except Exception as e:
+    print(f'Error: {e}')
+input("Press enter to continue...")

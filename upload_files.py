@@ -22,6 +22,7 @@ config = read_config(config_file)
 target_dir = config['target']
 files = config['registry']
 curr_timestamp = int(time.time())
+config['last-check'] = curr_timestamp
 
 for file in files:
     path = file['path']

@@ -8,6 +8,8 @@ file_path = os.path.realpath(__file__)
 dir_path = os.path.dirname(file_path)
 
 python_path = sys.executable 
+python_folder = os.path.dirname(python_path)
+pythonw_path = os.path.join(python_folder, 'pythonw3.exe')
 
 config_file = os.path.join(dir_path, 'config.json')
 uploader_path = os.path.join(dir_path, 'upload_files.py')
@@ -29,7 +31,7 @@ winreg.SetValue(command_key, '', winreg.REG_SZ, reg_command)
 
 # Define task parameters
 task_name = "File Auto Uploader"
-task_command = f'{python_path} "{uploader_path}" "{config_arg}"'
+task_command = f'{pythonw_path} "{uploader_path}" "{config_arg}"'
 
 # Construct the schtasks command
 schtasks_command = [

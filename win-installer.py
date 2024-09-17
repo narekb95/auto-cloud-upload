@@ -67,6 +67,7 @@ def select_folder():
     global folder_path
     path = filedialog.askdirectory()
     if path:
+        path = os.path.normpath(path)
         folder_path = path
         folder_label.config(text=f"Selected folder: {path}")
 

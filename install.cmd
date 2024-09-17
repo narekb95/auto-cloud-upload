@@ -1,0 +1,1 @@
+start pythonw3.exe win-installer.py

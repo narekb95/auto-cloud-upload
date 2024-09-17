@@ -1,9 +1,7 @@
 import json
 import datetime
 def read_arg(target : str, argv):
-    # Read the parameters of syntax --arg=value
-    # and return the value
-    arg =  next((a for a in argv if a.startswith('--') and a[2:2 + len(target)] == target), None)
+    arg =  next((a for a in argv if a.startswith(f'--{target}=')), None)
     return arg.split('=')[1] if arg != None else None
 
 def log(s):
@@ -14,14 +12,12 @@ def timestamp_to_date(ts):
 
 
 def read_config(file):
-    f = open(file, 'r')
-    data = f.read()
-    config = json.loads(data)
-    f.close()
+    with open(file, 'r') as f: 
+        data = f.read()
+        config = json.loads(data)
     return config
 
 def update_config(file, config):
     out = json.dumps(config)
-    f = open(file, 'w')
-    f.write(out)
-    f.close()
+    with open(file, 'w') as f:
+        f.write(out)

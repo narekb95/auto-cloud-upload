@@ -76,7 +76,7 @@ def select_folder():
         folder_label.config(text=f"Selected folder: {path}")
 
 root = tk.Tk()
-root.title("Folder Selector")
+root.title("Auto Upload Installer")
 root.geometry("400x150")
 
 # Create a label to display the selected folder

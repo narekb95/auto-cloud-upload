@@ -5,7 +5,7 @@ import sys
 import json
 
 import tkinter as tk
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
 
 def create_config_file(target_folder, config_file):
     config_data = {
@@ -59,8 +59,12 @@ def run_installer(target_folder):
     create_registry_key(python_path, adder_path, config_arg)
     create_task(pythonw_path, uploader_path, config_arg)
     create_config_file(target_folder, config_file)
+    show_popup()
+    exit()
 
 # UI
+def show_popup():
+    messagebox.showinfo("Installation", "Install Complete")
 
 folder_path = None
 def select_folder():

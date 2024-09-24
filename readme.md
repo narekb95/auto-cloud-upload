@@ -12,7 +12,7 @@ Basic use case is to sync files to the cloud by setting the target to a synced f
 
 ### The installer performs three actions:
 
-- Creates a config file (in the same directory as the installer).
+- Creates a config file (in `%LOCALAPPDATA%`).
 
 ![config](media/config.png)
 
@@ -23,10 +23,10 @@ Basic use case is to sync files to the cloud by setting the target to a synced f
 - Schedules a 1-minute frequency task that monitors file changes.
 
 ## Syntax of the config file (`config.json`)
-- `target`: Path to output director.
-- `registery`: list of files to by synced.
+- `target`: Path to the target directory.
+- `registery`: List of files to by synced.
 - File format:
     - `name`: Output name in the synced directory.
-    - `path`: Full path to file including file name.
+    - `path`: Full path to the file including file name.
     - `last-update`: The most recent timestamp the file was copied.
-- `last-check`: Timestamp of the last uploader run.
+- `last-check`: Timestamp of the last run.

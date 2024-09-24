@@ -1,10 +1,9 @@
 from sys import argv
 from shutil import copyfile
-import json
+import config
 import time
 import os
 
-from helpers import read_arg, log, timestamp_to_date, update_config, read_config
 
 def file_exists_and_changed(last_check, file):
     if not os.path.isfile(file):
@@ -12,16 +11,11 @@ def file_exists_and_changed(last_check, file):
     time = os.path.getmtime(file)
     return time > last_check
 
-
-config_file = read_arg('config-file', argv)
-if config_file is None:
-    raise Exception('Config file not provided.')
-
-config = read_config(config_file)
-target_dir = config['target']
-files = config['registry']
+config = config.Config()
+target_dir = config.target_dir
+files = config.files
 curr_timestamp = int(time.time())
-config['last-check'] = curr_timestamp
+config.last_check = curr_timestamp
 
 for file in files:
     path = file['path']
@@ -34,5 +28,4 @@ for file in files:
         print(f'File {name} updated.')
     else: 
         print(f'File {name} uptodate.')
-
-update_config(config_file, config)
+config.update_config()

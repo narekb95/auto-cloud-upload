@@ -2,31 +2,26 @@ import winreg
 import subprocess
 import os
 import sys
-import json
 
 import tkinter as tk
 from tkinter import filedialog, messagebox
 
-def create_config_file(target_folder, config_file):
-    config_data = {
-        "target": target_folder,
-        "registry": []
-    }
-    with open(config_file, 'w') as f:
-        json.dump(config_data, f)
+from config import create_config_file
 
-def create_registry_key(python_path, adder_path, config_arg):
+def create_registry_key(python_path, adder_path):
     key_path = r'Software\Classes\*\shell\AutoUpload'
-    reg_command = f'{python_path} "{adder_path}" "%1" "{config_arg}"'
+    reg_command = f'{python_path} "{adder_path}" "%1"'
     user_key = winreg.HKEY_CURRENT_USER
     uploader_key = winreg.CreateKey(user_key, key_path)
     command_key = winreg.CreateKey(uploader_key, 'command')
+    print(f'Created registry key: {key_path}')
     winreg.SetValue(uploader_key, '', winreg.REG_SZ, 'Add to Auto-upload')
     winreg.SetValue(command_key, '', winreg.REG_SZ, reg_command)
+    print(f'Created registry command: {reg_command} for key: {key_path}')
 
-def create_task(pythonw_path, uploader_path, config_arg):
+def create_task(pythonw_path, uploader_path):
     task_name = "File Auto Uploader"
-    task_command = f'{pythonw_path} "{uploader_path}" "{config_arg}"'
+    task_command = f'{pythonw_path} "{uploader_path}"'
     schtasks_command = [
         "schtasks",
         "/Create",
@@ -46,19 +41,17 @@ def run_installer(target_folder):
     file_path = os.path.realpath(__file__)
     dir_path = os.path.dirname(file_path)
 
-    python_path = sys.executable 
-    python_folder = os.path.dirname(python_path)
+    exec_path = sys.executable 
+    python_folder = os.path.dirname(exec_path)
+    python_path = os.path.join(python_folder, 'python3.exe')
     pythonw_path = os.path.join(python_folder, 'pythonw3.exe')
 
-    config_file = os.path.join(dir_path, 'config.json')
     uploader_path = os.path.join(dir_path, 'upload_files.py')
     adder_path = os.path.join(dir_path, 'add_file.py')
 
-    config_arg = f'--config-file={config_file}'
-
-    create_registry_key(python_path, adder_path, config_arg)
-    create_task(pythonw_path, uploader_path, config_arg)
-    create_config_file(target_folder, config_file)
+    create_registry_key(python_path, adder_path)
+    create_task(pythonw_path, uploader_path)
+    create_config_file(target_folder)
     show_popup()
     exit()
 

@@ -3,14 +3,16 @@ import json
 
 import helpers
 
-_file_name = 'config.json'
-_config_file = os.path.join(helpers.App_Data, _file_name)
+_config_file_name = 'config.json'
+_config_file = os.path.join(helpers.App_Data, _config_file_name)
 
 def create_config_file(target_folder):
     config_data = {
         "target": target_folder,
         "registry": []
     }
+    print(f"Creating config file at {_config_file}")
+    os.makedirs(helpers.App_Data, exist_ok=True)
     with open(_config_file, 'w') as f:
         json.dump(config_data, f)
         

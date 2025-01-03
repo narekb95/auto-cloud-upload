@@ -6,10 +6,10 @@ from helpers import timestamp_to_date, open_file
 
 def get_data():
     config = Config()
-    files = sorted(config.files, key=lambda f: f['last-update'], reverse=True)
+    files = sorted(config.files, key=lambda f: f['last-update'] if 'last-update' in f else 0, reverse=True)
     return list(map(lambda f: {
         'name': f['name'],
-        'timestamp': timestamp_to_date(f['last-update']),
+        'timestamp': timestamp_to_date(f['last-update']) if 'last-update' in f else 'N/A',
         'path': path.join(config.target_dir, f['name'])
         }, files))
 

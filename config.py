@@ -10,10 +10,18 @@ _config_file = os.path.join(helpers.App_Data, _config_file_name)
 
 def create_config_file(target_folder):
     # if the config file already exists, do nothing
+
+    # show popup message to ask if the user wants to overwrite the file
+    # create message box three options: overwrite, skip, update path
+    # all options do nothing
+    message = "A configuration file already exists. Do you want to overwrite it?"
+    options = ['Overwrite', 'Skip', 'Update Path']
+    result = messagebox.askquestion('Config file exists', message, icon='warning', options=options)
+    messagebox.showinfo('Result', result)
+    return
+
     if os.path.exists(_config_file):
-        # show popup message to ask if the user wants to overwrite the file
-        if not messagebox.askyesno("Config file exists", "Config file already exists. Do you want to overwrite it?"):
-            return
+        
 
     config_data = {
         "target": target_folder,

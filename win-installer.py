@@ -38,26 +38,29 @@ def create_task(pythonw_path, uploader_path):
 
     
 def run_installer(target_folder):
-    file_path = os.path.realpath(__file__)
-    dir_path = os.path.dirname(file_path)
+    installer_path = os.path.realpath(__file__)
+    installer_dir = os.path.dirname(installer_path)
 
     exec_path = sys.executable 
     python_folder = os.path.dirname(exec_path)
     python_path = os.path.join(python_folder, 'python3.exe')
     pythonw_path = os.path.join(python_folder, 'pythonw3.exe')
 
-    uploader_path = os.path.join(dir_path, 'upload_files.py')
-    adder_path = os.path.join(dir_path, 'add_file.py')
+    uploader_path = os.path.join(installer_dir, 'upload_files.py')
+    adder_path = os.path.join(installer_dir, 'add_file.py')
 
     create_registry_key(python_path, adder_path)
     create_task(pythonw_path, uploader_path)
-    create_config_file(target_folder)
-    show_popup()
+    try:
+        create_config_file(target_folder)
+    except FileExistsError as e:
+        show_popup("Installation", e)
+    show_popup("Installation", "Install Complete")
     exit()
 
 # UI
-def show_popup():
-    messagebox.showinfo("Installation", "Install Complete")
+def show_popup(title, message):
+    messagebox.showinfo(title, message)
 
 folder_path = None
 def select_folder():

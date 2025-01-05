@@ -51,16 +51,13 @@ def run_installer(target_folder):
 
     create_registry_key(python_path, adder_path)
     create_task(pythonw_path, uploader_path)
-    try:
-        create_config_file(target_folder)
-    except FileExistsError as e:
-        show_popup("Installation", e)
-    show_popup("Installation", "Install Complete")
+    create_config_file(target_folder)
+    show_popup()
     exit()
 
 # UI
-def show_popup(title, message):
-    messagebox.showinfo(title, message)
+def show_popup():
+    messagebox.showinfo("Installation", "Install Complete")
 
 folder_path = None
 def select_folder():

@@ -1,32 +1,39 @@
 import os
 import json
 
+from enum import Enum
 import helpers
-
-from tkinter import messagebox
+from custom_tk import custom_messagebox
 
 _config_file_name = 'config.json'
 _config_file = os.path.join(helpers.App_Data, _config_file_name)
 
 def create_config_file(target_folder):
-    # if the config file already exists, do nothing
+    class ResponseEnum(Enum):
+        overwrite = 'overwrite'
+        update_path = 'update path'
+        skip = 'skip'
 
-    # show popup message to ask if the user wants to overwrite the file
-    # create message box three options: overwrite, skip, update path
-    # all options do nothing
-    message = "A configuration file already exists. Do you want to overwrite it?"
-    options = ['Overwrite', 'Skip', 'Update Path']
-    result = messagebox.askquestion('Config file exists', message, icon='warning', options=options)
-    messagebox.showinfo('Result', result)
-    return
+
+    
 
     if os.path.exists(_config_file):
-        
-
-    config_data = {
-        "target": target_folder,
-        "registry": []
-    }
+        response = custom_messagebox("Error", "Config file already exists", ["overwrite", "update path", "skip"])
+        response = ResponseEnum(response)
+    
+    config_data = {}
+    if response == ResponseEnum.skip:
+        return
+    elif response == ResponseEnum.update_path:
+        config_data = json.load(open(_config_file, 'r'))
+        config_data['target'] = target_folder
+        for file in config_data['registry']:
+            del file['last-update']
+    else:
+        config_data = {
+            "target": target_folder,
+            "registry": []
+        }
     print(f"Creating config file at {_config_file}")
     os.makedirs(helpers.App_Data, exist_ok=True)
     with open(_config_file, 'w') as f:

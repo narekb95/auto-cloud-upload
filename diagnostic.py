@@ -43,8 +43,7 @@ def create_table(frame):
         # Bind click event to open the file
         label_name.bind("<Button-1>", lambda e, path=row['path']: open_file(path))
 
-        label_timestamp = tk.Label(frame, text=row['timestamp'], padx=25, pady=5, borderwidth=0, relief="solid",
-                                    bg=bg_col, anchor="w", font=("Arial", 16))
+        label_timestamp = tk.Label(frame, text=row['timestamp'], padx=25, pady=5, borderwidth=0, relief="solid", bg=bg_col, anchor="w", font=("Arial", 16))
         label_timestamp.grid(row=i, column=1, sticky="nsew")
 
     frame.grid_columnconfigure(0, weight=8)

@@ -1,8 +1,9 @@
 import tkinter as tk
-
 from os import path
+
 from config import Config
 from helpers import timestamp_to_date, open_file
+from add_file import open_add_file_dialog
 
 def get_data():
     config = Config()
@@ -48,6 +49,14 @@ def create_table(frame):
     frame.grid_columnconfigure(1, weight=3)
     frame.grid_columnconfigure(2, weight=1)
 
+    add_button = tk.Button(frame, text="Add File", padx=25, pady=5, borderwidth=0, relief="solid", font=("Arial", 16), command=lambda: handle_add_file())
+    add_button.grid(row=len(data), column=0, columnspan=3, sticky="nsew")
+
+def handle_add_file():
+    dialog = tk.Toplevel()
+    root.title("Add file")
+    root.geometry("600x400")
+    open_add_file_dialog(dialog)
 
 def resize_table(event):
     canvas_width = event.width

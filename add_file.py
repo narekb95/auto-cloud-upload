@@ -66,7 +66,7 @@ if __name__ == '__main__':
     path = argv[1] if len(argv) > 1 else ''
 
     root = tk.Tk()
-    root.title("Active files")
+    root.title("Add file")
     root.geometry("600x400")
 
     open_add_file_dialog(root, path)

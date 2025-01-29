@@ -14,18 +14,18 @@ def get_data():
         'path': path.join(config.target_dir, f['name'])
         }, files))
 
-def remove_file(file_name, table_frame):
+def remove_file(file_name, table_frame, root):
     config = Config()
     config.files = list(filter(lambda f: f['name'] != file_name, config.files))
     config.update_config()
-    refresh_table(table_frame)
+    refresh_table(table_frame, root)
 
-def refresh_table(table_frame):
+def refresh_table(table_frame, root):
     for widget in table_frame.winfo_children():
         widget.destroy()
-    create_table(table_frame)
+    create_table(table_frame, root)
 
-def create_table(frame):
+def create_table(frame, root):
     data = get_data()
     for i, row in enumerate(data):
         bg_col = "white" if i % 2 == 0 else "lightgrey"
@@ -43,19 +43,20 @@ def create_table(frame):
         label_remove = tk.Button(frame, text="X", padx=25, pady=1, borderwidth=0, relief="solid")
         label_remove.config(bg=bg_col, fg="red", font=("Arial", 10, "bold"))
         label_remove.grid(row=i, column=2, sticky="nsew")
-        label_remove.bind("<Button-1>", lambda e, row=row: remove_file(row['name'], frame))
+        label_remove.bind("<Button-1>", lambda e, row=row: remove_file(row['name'], frame, root))
 
     frame.grid_columnconfigure(0, weight=8)
     frame.grid_columnconfigure(1, weight=3)
     frame.grid_columnconfigure(2, weight=1)
 
-    add_button = tk.Button(frame, text="Add File", padx=25, pady=5, borderwidth=0, relief="solid", font=("Arial", 16), command=lambda: handle_add_file())
+    add_button = tk.Button(frame, text="Add File", padx=25, pady=5, borderwidth=0, relief="solid", font=("Arial", 16), command=lambda: handle_add_file(root))
     add_button.grid(row=len(data), column=0, columnspan=3, sticky="nsew")
 
-def handle_add_file():
+def handle_add_file(root):
     dialog = tk.Toplevel()
-    root.title("Add file")
-    root.geometry("600x400")
+    dialog.title("Add file")
+    dialog.geometry("600x400")
+    dialog.transient(root)
     open_add_file_dialog(dialog)
 
 def resize_table(event):
@@ -77,13 +78,13 @@ table_frame = tk.Frame(canvas)
 table_window = canvas.create_window((0, 0), window=table_frame, anchor="nw")
 
 # add button to the bottom right corner with small margin
-refresh_button = tk.Button(canvas, text="Refresh", padx=10, pady=5, command=lambda: refresh_table(table_frame))
+refresh_button = tk.Button(canvas, text="Refresh", padx=10, pady=5, command=lambda: refresh_table(table_frame, root))
 refresh_button.pack(side=tk.BOTTOM, anchor="se", padx=10, pady=10)
 
 canvas.bind("<Configure>", resize_table)
 table_frame.bind("<Configure>", update_scrollregion)
 canvas.bind_all("<MouseWheel>", on_mouse_wheel)
 
-create_table(table_frame)
+create_table(table_frame, root)
 
 root.mainloop()

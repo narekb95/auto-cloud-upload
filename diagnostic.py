@@ -13,10 +13,25 @@ def get_data():
         'path': path.join(config.target_dir, f['name'])
         }, files))
 
+def remove_file(file_name, table_frame):
+    config = Config()
+    config.files = list(filter(lambda f: f['name'] != file_name, config.files))
+    config.update_config()
+    # refresh the table
+    for widget in table_frame.winfo_children():
+        widget.destroy()
+    create_table(table_frame)
+
 def create_table(frame):
     data = get_data()
     for i, row in enumerate(data):
         bg_col = "white" if i % 2 == 0 else "lightgrey"
+
+        label_remove = tk.Button(frame, text="X", padx=25, pady=1, borderwidth=0, relief="solid")
+        label_remove.config(bg=bg_col, fg="red", font=("Arial", 10, "bold"))
+        label_remove.grid(row=i, column=2, sticky="nsew")
+        label_remove.bind("<Button-1>", lambda e, row=row: remove_file(row['name'], frame))
+
         label_name = tk.Label(frame, text=row['name'], padx=25, pady=5, borderwidth=0, relief="solid",
                               bg=bg_col, anchor="w", font=("Arial", 16))
         label_name.grid(row=i, column=0, sticky="nsew")

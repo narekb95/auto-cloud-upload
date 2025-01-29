@@ -40,24 +40,26 @@ def create_table(frame, root):
         label_timestamp = tk.Label(frame, text=row['timestamp'], padx=25, pady=5, borderwidth=0, relief="solid", bg=bg_col, anchor="w", font=("Arial", 16))
         label_timestamp.grid(row=i, column=1, sticky="nsew")
 
-        label_remove = tk.Button(frame, text="X", padx=25, pady=1, borderwidth=0, relief="solid")
+        label_remove = tk.Button(frame, text='X', padx=25, pady=1, borderwidth=0, relief="solid", command=lambda: remove_file(row['name'], frame, root))
         label_remove.config(bg=bg_col, fg="red", font=("Arial", 10, "bold"))
         label_remove.grid(row=i, column=2, sticky="nsew")
-        label_remove.bind("<Button-1>", lambda e, row=row: remove_file(row['name'], frame, root))
 
     frame.grid_columnconfigure(0, weight=8)
     frame.grid_columnconfigure(1, weight=3)
     frame.grid_columnconfigure(2, weight=1)
 
-    add_button = tk.Button(frame, text="Add File", padx=25, pady=5, borderwidth=0, relief="solid", font=("Arial", 16), command=lambda: handle_add_file(root))
+    add_button = tk.Button(frame, text="Add File", padx=25, pady=5, borderwidth=0, relief="solid", font=("Arial", 16), command=lambda: handle_add_file(table_frame, root))
     add_button.grid(row=len(data), column=0, columnspan=3, sticky="nsew")
 
-def handle_add_file(root):
+def handle_add_file(table_frame, root):
     dialog = tk.Toplevel()
     dialog.title("Add file")
     dialog.geometry("600x400")
     dialog.transient(root)
     open_add_file_dialog(dialog)
+    root.wait_window(dialog)
+    refresh_table(table_frame, root)
+    
 
 def resize_table(event):
     canvas_width = event.width

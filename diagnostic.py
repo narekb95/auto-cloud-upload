@@ -17,7 +17,9 @@ def remove_file(file_name, table_frame):
     config = Config()
     config.files = list(filter(lambda f: f['name'] != file_name, config.files))
     config.update_config()
-    # refresh the table
+    refresh_table(table_frame)
+
+def refresh_table(table_frame):
     for widget in table_frame.winfo_children():
         widget.destroy()
     create_table(table_frame)
@@ -45,8 +47,10 @@ def create_table(frame):
                                     bg=bg_col, anchor="w", font=("Arial", 16))
         label_timestamp.grid(row=i, column=1, sticky="nsew")
 
-    frame.grid_columnconfigure(0, weight=2)
-    frame.grid_columnconfigure(1, weight=1)
+    frame.grid_columnconfigure(0, weight=8)
+    frame.grid_columnconfigure(1, weight=3)
+    frame.grid_columnconfigure(2, weight=1)
+
 
 def resize_table(event):
     canvas_width = event.width
@@ -58,7 +62,6 @@ def update_scrollregion(_):
 def on_mouse_wheel(event):
     canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
 
-
 root = tk.Tk()
 root.title("Active files")
 root.geometry("600x400")
@@ -66,6 +69,10 @@ canvas = tk.Canvas(root)
 canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 table_frame = tk.Frame(canvas)
 table_window = canvas.create_window((0, 0), window=table_frame, anchor="nw")
+
+# add button to the bottom right corner with small margin
+refresh_button = tk.Button(canvas, text="Refresh", padx=10, pady=5, command=lambda: refresh_table(table_frame))
+refresh_button.pack(side=tk.BOTTOM, anchor="se", padx=10, pady=10)
 
 canvas.bind("<Configure>", resize_table)
 table_frame.bind("<Configure>", update_scrollregion)

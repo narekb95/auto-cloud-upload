@@ -3,7 +3,6 @@ import tkinter as tk
 from os import path
 from config import Config
 from helpers import timestamp_to_date, open_file
-from tkinter import filedialog
 
 def get_data():
     config = Config()
@@ -20,7 +19,6 @@ def remove_file(file_name, table_frame):
     config.update_config()
     refresh_table(table_frame)
 
-        
 def refresh_table(table_frame):
     for widget in table_frame.winfo_children():
         widget.destroy()

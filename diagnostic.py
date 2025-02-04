@@ -40,7 +40,7 @@ def create_table(frame, root):
         label_timestamp = tk.Label(frame, text=row['timestamp'], padx=25, pady=5, borderwidth=0, relief="solid", bg=bg_col, anchor="w", font=("Arial", 16))
         label_timestamp.grid(row=i, column=1, sticky="nsew")
 
-        label_remove = tk.Button(frame, text='X', padx=25, pady=1, borderwidth=0, relief="solid", command=lambda: remove_file(row['name'], frame, root))
+        label_remove = tk.Button(frame, text='X', padx=25, pady=1, borderwidth=0, relief="solid", command=lambda r=row: remove_file(r['name'], frame, root))
         label_remove.config(bg=bg_col, fg="red", font=("Arial", 10, "bold"))
         label_remove.grid(row=i, column=2, sticky="nsew")
 

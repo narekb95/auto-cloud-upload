@@ -2,8 +2,18 @@ import tkinter as tk
 from os import path
 
 from config import Config
-from helpers import timestamp_to_date, open_file
+from helpers import timestamp_to_date, open_file, RepeatTimer
 from add_file import open_add_file_dialog
+from update_files import update_files
+
+DEFAULT_CHECK_INTERVAL = 5
+
+def get_new_timer(table_frame, root):
+    timer = RepeatTimer(DEFAULT_CHECK_INTERVAL, refresh_table, [table_frame, root])
+    timer.daemon = True
+    timer.start()
+    return timer
+
 
 def get_data():
     config = Config()
@@ -15,15 +25,27 @@ def get_data():
         }, files))
 
 def remove_file(file_name, table_frame, root):
+    print(f'Removing file {file_name}...')
+    global timer
+    timer.cancel()
+
     config = Config()
     config.files = list(filter(lambda f: f['name'] != file_name, config.files))
     config.update_config()
-    refresh_table(table_frame, root)
+    refresh_table(table_frame, root, force_update=True)
 
-def refresh_table(table_frame, root):
-    for widget in table_frame.winfo_children():
-        widget.destroy()
-    create_table(table_frame, root)
+    timer = get_new_timer(table_frame, root)
+
+
+
+
+
+def refresh_table(table_frame, root, force_update=False):
+    print('Refreshing table...')
+    if update_files() or force_update:
+        for widget in table_frame.winfo_children():
+            widget.destroy()
+        create_table(table_frame, root)
 
 def create_table(frame, root):
     data = get_data()
@@ -52,6 +74,9 @@ def create_table(frame, root):
     add_button.grid(row=len(data), column=0, columnspan=3, sticky="nsew")
 
 def handle_add_file(table_frame, root):
+    global timer
+    timer.cancel()
+    
     dialog = tk.Toplevel()
     dialog.title("Add file")
     dialog.geometry("600x400")
@@ -59,6 +84,8 @@ def handle_add_file(table_frame, root):
     open_add_file_dialog(dialog)
     root.wait_window(dialog)
     refresh_table(table_frame, root)
+
+    timer = get_new_timer(table_frame, root)
     
 
 def resize_table(event):
@@ -80,8 +107,9 @@ table_frame = tk.Frame(canvas)
 table_window = canvas.create_window((0, 0), window=table_frame, anchor="nw")
 
 # add button to the bottom right corner with small margin
-refresh_button = tk.Button(canvas, text="Refresh", padx=10, pady=5, command=lambda: refresh_table(table_frame, root))
-refresh_button.pack(side=tk.BOTTOM, anchor="se", padx=10, pady=10)
+# refresh_button = tk.Button(canvas, text="Refresh", padx=10, pady=5, command=lambda: refresh_table(table_frame, root))
+# refresh_button.pack(side=tk.BOTTOM, anchor="se", padx=10, pady=10)
+timer = get_new_timer(table_frame, root)
 
 canvas.bind("<Configure>", resize_table)
 table_frame.bind("<Configure>", update_scrollregion)

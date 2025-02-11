@@ -4,9 +4,12 @@ import json
 from enum import Enum
 import helpers
 from custom_tk import custom_messagebox
+from filelock import FileLock
 
 _config_file_name = 'config.json'
 _config_file = os.path.join(helpers.App_Data, _config_file_name)
+
+DEFAULT_TASK_INTERVAL = 60
 
 def create_config_file(target_folder):
     class ResponseEnum(Enum):
@@ -16,7 +19,7 @@ def create_config_file(target_folder):
 
 
     
-
+    response = ResponseEnum.overwrite
     if os.path.exists(_config_file):
         response = custom_messagebox("Error", "Config file already exists", ["overwrite", "update path", "skip"])
         response = ResponseEnum(response)
@@ -32,7 +35,9 @@ def create_config_file(target_folder):
     else:
         config_data = {
             "target": target_folder,
-            "registry": []
+            "registry": [],
+            "update_task_interval": DEFAULT_TASK_INTERVAL,
+            "last-check": 0,
         }
     print(f"Creating config file at {_config_file}")
     os.makedirs(helpers.App_Data, exist_ok=True)
@@ -44,16 +49,20 @@ class Config:
         config = self.read_config()
         self.target_dir = config['target']
         self.files = config['registry']
-        self.last_check = config['last-check'] if 'last-check' in config else 0
+        self.update_task_interval = config['update-task-interval']
+        self.last_check = config['last-check']
 
     def read_config(self):
         with open(_config_file, 'r') as f:
             return json.load(f)
 
     def update_config(self):
-        with open(_config_file, 'w') as f:
-            json.dump({
-                'target': self.target_dir,
-                'registry': self.files,
-                'last-check': self.last_check
-            }, f)
+        lock = FileLock(f"{_config_file}.lock")
+        with lock:
+            with open(_config_file, 'w') as f:
+                json.dump({
+                    'target': self.target_dir,
+                    'registry': self.files,
+                    'update-task-interval': self.update_task_interval,
+                    'last-check': self.last_check,
+                }, f)

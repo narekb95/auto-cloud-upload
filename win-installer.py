@@ -45,7 +45,7 @@ def run_installer(target_folder):
     python_folder = os.path.dirname(exec_path)
     pythonw_path = os.path.join(python_folder, 'pythonw3.exe')
 
-    uploader_path = os.path.join(installer_dir, 'upload_files.py')
+    uploader_path = os.path.join(installer_dir, 'update_files.py')
     adder_path = os.path.join(installer_dir, 'add_file.py')
 
     create_registry_key(pythonw_path, adder_path)

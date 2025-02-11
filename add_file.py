@@ -4,6 +4,7 @@ from config import Config
 import tkinter as tk
 from tkinter import filedialog
 
+from update_files import update_files
 
 def add_file(path, name):
     config = Config()
@@ -14,6 +15,8 @@ def add_file(path, name):
         raise ValueError(f'File {name} already exists in auto-upload.')
     config.files.append({'path': path, 'name': name})
     config.update_config()
+    updated = update_files()
+    assert(updated)
 
 def update_path(path_var):
     newpath = filedialog.askopenfilename()

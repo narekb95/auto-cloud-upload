@@ -32,17 +32,16 @@ def remove_file(file_name, table_frame, root):
     config = Config()
     config.files = list(filter(lambda f: f['name'] != file_name, config.files))
     config.update_config()
-    refresh_table(table_frame, root, force_update=True)
+    refresh_table(table_frame, root, force_refresh_window=True)
 
     timer = get_new_timer(table_frame, root)
 
 
 
-
-
-def refresh_table(table_frame, root, force_update=False):
+# force is used on add/delete since config is already updated there
+def refresh_table(table_frame, root, force_refresh_window=False):
     print('Refreshing table...')
-    if update_files() or force_update:
+    if update_files() or force_refresh_window:
         for widget in table_frame.winfo_children():
             widget.destroy()
         create_table(table_frame, root)
@@ -83,7 +82,7 @@ def handle_add_file(table_frame, root):
     dialog.transient(root)
     open_add_file_dialog(dialog)
     root.wait_window(dialog)
-    refresh_table(table_frame, root)
+    refresh_table(table_frame, root, force_refresh_window=True)
 
     timer = get_new_timer(table_frame, root)
     

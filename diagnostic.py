@@ -1,5 +1,6 @@
 import tkinter as tk
-from os import path
+from os import path, listdir
+from os import remove as delete_file
 
 from config import Config
 from helpers import timestamp_to_date, open_file, RepeatTimer
@@ -38,7 +39,7 @@ def remove_file(file_name, table_frame, root):
 
 
 
-# force is used on add/delete since config is already updated there
+# force is used on add/remove since config is already updated there
 def refresh_table(table_frame, root, force_refresh_window=False):
     print('Refreshing table...')
     if update_files() or force_refresh_window:
@@ -87,6 +88,23 @@ def handle_add_file(table_frame, root):
     timer = get_new_timer(table_frame, root)
     
 
+# delete uncynced files
+def delete_unsynced_files():
+    # show a popup asking if sure
+    # delete all files that are not in the config
+    response = tk.messagebox.askyesno("Delete Unsynced Files", "Are you sure you want to delete all unsynced files?")
+    if not response:
+        return
+    
+    config = Config()
+    files = [file['name'] for file in config.files]
+    dir = config.target_dir
+    # list all files in dir
+    files_in_dir = [f for f in listdir(dir) if path.isfile(path.join(dir, f))]
+    for file in files_in_dir:
+        if file not in files:
+            delete_file(path.join(dir, file))
+
 def resize_table(event):
     canvas_width = event.width
     canvas.itemconfig(table_window, width=canvas_width)
@@ -105,9 +123,9 @@ canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 table_frame = tk.Frame(canvas)
 table_window = canvas.create_window((0, 0), window=table_frame, anchor="nw")
 
-# add button to the bottom right corner with small margin
-# refresh_button = tk.Button(canvas, text="Refresh", padx=10, pady=5, command=lambda: refresh_table(table_frame, root))
-# refresh_button.pack(side=tk.BOTTOM, anchor="se", padx=10, pady=10)
+delete_button = tk.Button(canvas, text="Delete Unsynced Files", padx=10, pady=5, command=delete_unsynced_files)
+delete_button.pack(side=tk.BOTTOM, anchor="se", padx=10, pady=10)
+
 timer = get_new_timer(table_frame, root)
 
 canvas.bind("<Configure>", resize_table)

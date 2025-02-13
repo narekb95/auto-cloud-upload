@@ -65,7 +65,7 @@ def open_add_file_dialog(dialog, path=''):
     submit_button = tk.Button(dialog, text="Submit", font=font_main, command=lambda: handle_submit(path_var.get(), entry_name.get(), error_var, dialog))
     submit_button.pack(pady=10)
 
-if __name__ == '__main__':
+def main():
     path = argv[1] if len(argv) > 1 else ''
 
     root = tk.Tk()
@@ -75,18 +75,5 @@ if __name__ == '__main__':
     open_add_file_dialog(root, path)
     root.mainloop()
 
-    # config = Config()
-
-    # valid_name = False
-    # while not valid_name:
-    #     name = input('Target file name: ')
-    #     valid_name = True
-    #     try:
-    #         add_file(path, name, config)
-    #         print(f'File {name} added to auto-upload.')
-    #     except ValueError as e:
-    #         print(f'Value error: {e}')
-    #         valid_name = False
-    #     except Exception as e:
-    #         print(f'Failed to add file {name}. Error: {e}')
-    # input('Press Enter to exit...')
+if __name__ == '__main__':
+    main()

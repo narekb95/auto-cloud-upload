@@ -46,6 +46,9 @@ def refresh_table(table_frame, root, force_refresh_window=False):
         for widget in table_frame.winfo_children():
             widget.destroy()
         create_table(table_frame, root)
+        for widget in unsynced_files_frame.winfo_children():
+            widget.destroy()
+        refresh_unsynced_files(unsynced_files_frame)
 
 def create_table(frame, root):
     data = get_data()
@@ -70,7 +73,7 @@ def create_table(frame, root):
     frame.grid_columnconfigure(1, weight=3)
     frame.grid_columnconfigure(2, weight=1)
 
-    add_button = tk.Button(frame, text="Add File", padx=25, pady=5, borderwidth=0, relief="solid", font=("Arial", 16), command=lambda: handle_add_file(table_frame, root))
+    add_button = tk.Button(frame, text="Add File", padx=25, pady=5, borderwidth=0, relief="solid", font=("Arial", 16), command=lambda: handle_add_file(frame, root))
     add_button.grid(row=len(data), column=0, columnspan=3, sticky="nsew")
 
 def handle_add_file(table_frame, root):
@@ -89,7 +92,7 @@ def handle_add_file(table_frame, root):
     
 
 # delete uncynced files
-def delete_unsynced_files():
+def delete_unsynced_files(table_frame):
     # show a popup asking if sure
     # delete all files that are not in the config
     response = tk.messagebox.askyesno("Delete Unsynced Files", "Are you sure you want to delete all unsynced files?")
@@ -101,10 +104,11 @@ def delete_unsynced_files():
     for file in unsynced_files:
         delete_file(path.join(dir, file))
         print(f'Deleted file {file}')
+    refresh_table(table_frame, root, force_refresh_window=True)
 
-def resize_table(event):
+def resize_table(event, window):
     canvas_width = event.width
-    canvas.itemconfig(table_window, width=canvas_width)
+    canvas.itemconfig(window, width=canvas_width)
 
 def update_scrollregion(_):
     canvas.configure(scrollregion=canvas.bbox("all"))
@@ -112,23 +116,59 @@ def update_scrollregion(_):
 def on_mouse_wheel(event):
     canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
 
+def refresh_unsynced_files(frame):
+    dir, unsynced_files = get_unsynced_files()
+    for file in unsynced_files:
+        file_label = tk.Label(frame, text=file, padx=5, pady=5, borderwidth=0, relief="solid", font=("Arial", 10))
+        file_label.pack(side=tk.LEFT, padx=5)
+    frame.update_idletasks()
+
+
+def create_unsynced_files_widget(canvas):
+    unsynced_frame = tk.Frame(canvas)
+    unsynced_frame.pack(side=tk.BOTTOM, fill=tk.X)
+
+    unsynced_label = tk.Label(unsynced_frame, text="Unsynced Files:", font=("Arial", 12, "bold"))
+    unsynced_label.pack(side=tk.LEFT, padx=10)
+
+    unsynced_canvas = tk.Canvas(unsynced_frame, height=30)
+    unsynced_canvas.pack(side=tk.LEFT, fill=tk.X, expand=True)
+
+    unsynced_scrollbar = tk.Scrollbar(unsynced_frame, orient=tk.HORIZONTAL, command=unsynced_canvas.xview)
+    unsynced_scrollbar.pack(side=tk.BOTTOM, fill=tk.X)
+
+    unsynced_canvas.configure(xscrollcommand=unsynced_scrollbar.set)
+    unsynced_files_frame = tk.Frame(unsynced_canvas)
+    unsynced_canvas.create_window((0, 0), window=unsynced_files_frame, anchor="nw")
+    unsynced_canvas.configure(scrollregion=unsynced_canvas.bbox("all"))
+    refresh_unsynced_files(unsynced_files_frame)
+    return unsynced_canvas
+
+
+def createTableWindow(root, canvas):
+    table_frame = tk.Frame(canvas)
+    table_window = canvas.create_window((0, 0), window=table_frame, anchor="nw")
+    canvas.bind("<Configure>", lambda e, window=table_window: resize_table(e, window))
+    table_frame.bind("<Configure>", update_scrollregion)
+    canvas.bind_all("<MouseWheel>", on_mouse_wheel)
+
+    create_table(table_frame, root)
+    global timer
+    timer = get_new_timer(table_frame, root)
+    return table_frame
+
 root = tk.Tk()
 root.title("Active files")
 root.geometry("600x400")
 canvas = tk.Canvas(root)
 canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-table_frame = tk.Frame(canvas)
-table_window = canvas.create_window((0, 0), window=table_frame, anchor="nw")
 
-delete_button = tk.Button(canvas, text="Delete Unsynced Files", padx=10, pady=5, command=delete_unsynced_files)
+table_frame = createTableWindow(root, canvas)
+unsynced_files_frame = create_unsynced_files_widget(canvas)
+
+delete_button = tk.Button(canvas, text="Delete Unsynced Files", padx=10, pady=5,\
+                command= lambda table_frame = table_frame: delete_unsynced_files(table_frame))
 delete_button.pack(side=tk.BOTTOM, anchor="se", padx=10, pady=10)
 
-timer = get_new_timer(table_frame, root)
-
-canvas.bind("<Configure>", resize_table)
-table_frame.bind("<Configure>", update_scrollregion)
-canvas.bind_all("<MouseWheel>", on_mouse_wheel)
-
-create_table(table_frame, root)
 
 root.mainloop()

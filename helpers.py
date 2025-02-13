@@ -1,6 +1,7 @@
 import os
 import datetime
 from threading import Timer
+import config as cnf
 
 class RepeatTimer(Timer):
     def run(self):
@@ -32,4 +33,14 @@ def open_file(path):
         os.startfile(path)  # For Windows
     else:
         raise FileNotFoundError
+
+def get_files_in_dir(directory):
+    return [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))]
+
+def get_unsynced_files():
+    config = cnf.Config()
+    files = [file['name'] for file in config.files]
+    dir = config.target_dir
     
+    files_in_dir = [f for f in os.listdir(dir) if os.path.isfile(os.path.join(dir, f))]
+    return dir, [f for f in files_in_dir if f not in files]

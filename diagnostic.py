@@ -1,9 +1,9 @@
 import tkinter as tk
-from os import path, listdir
+from os import path
 from os import remove as delete_file
 
 from config import Config
-from helpers import timestamp_to_date, open_file, RepeatTimer
+from helpers import timestamp_to_date, open_file, RepeatTimer, get_unsynced_files
 from add_file import open_add_file_dialog
 from update_files import update_files
 
@@ -96,14 +96,11 @@ def delete_unsynced_files():
     if not response:
         return
     
-    config = Config()
-    files = [file['name'] for file in config.files]
-    dir = config.target_dir
-    # list all files in dir
-    files_in_dir = [f for f in listdir(dir) if path.isfile(path.join(dir, f))]
-    for file in files_in_dir:
-        if file not in files:
-            delete_file(path.join(dir, file))
+    dir, unsynced_files = get_unsynced_files()
+    print(unsynced_files)
+    for file in unsynced_files:
+        delete_file(path.join(dir, file))
+        print(f'Deleted file {file}')
 
 def resize_table(event):
     canvas_width = event.width

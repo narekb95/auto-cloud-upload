@@ -11,12 +11,15 @@ from update_files import update_files
 
 DEFAULT_CHECK_INTERVAL = 5
 
-def get_new_timer(table_frame, root):
-    timer = RepeatTimer(DEFAULT_CHECK_INTERVAL, refresh_table, [table_frame, root])
+def start_new_timer():
+    global timer
+    timer = RepeatTimer(DEFAULT_CHECK_INTERVAL, refresh_table)
     timer.daemon = True
     timer.start()
-    return timer
 
+def stop_timer():
+    global timer
+    timer.cancel()
 
 def get_data():
     config = Config()
@@ -32,68 +35,53 @@ def open_file(file_name):
     file_path = path.join(config.target_dir, file_name)
     helpers.open_file(file_path)
 
-def remove_file(file_name, table_frame, root):
-    print(f'Removing file {file_name}...')
-    global timer
-    timer.cancel()
-
+def remove_files(files):
+    stop_timer()
     config = Config()
-    deleted_file = next(filter(lambda f: f['name'] == file_name, config.files), None)
-    if deleted_file:
-        config.files.remove(deleted_file)
-        config.update_config()
+    deleted_files = [file for file in config.files if file['name'] in files]
+    for file in deleted_files:
+        config.files.remove(file)
     config.update_config()
-    timer = get_new_timer(table_frame, root)
-
+    start_new_timer()
 
 
 # force is used on add/remove since config is already updated there
-def refresh_table(table_frame, root, force_refresh_window=False):
+def refresh_table(force_refresh_window=False):
     if update_files() or force_refresh_window:
-        for widget in table_frame.winfo_children():
-            widget.destroy()
-        create_table(table_frame, root)
+        synced_tree.delete(*synced_tree.get_children())
+        create_table()
         refresh_unsynced_files()
 
-def create_table(frame, root):
+def create_table():
     data = get_data()
 
     # Define Treeview
-    tree = ttk.Treeview(frame, columns=("Name", "Timestamp", "Remove"), show="headings")
-    tree.heading("Name", text="Name")
-    tree.heading("Timestamp", text="Timestamp")
-    tree.heading("Remove", text="Remove")
-
-    tree.column("Name", width=300, anchor="w")
-    tree.column("Timestamp", width=150, anchor="w")
-    tree.column("Remove", width=50, anchor="center")
+    tree = synced_tree
     # Insert Data
     for row in data:
-        tree.insert("", "end", values=(row["name"], row["timestamp"], "X"))
+        tree.insert("", "end", values=(row["name"], row["timestamp"]))
 
     tree.pack(fill=tk.BOTH, expand=True)
 
     # Bind Events
-    def on_click(event):
+    def handle_open_file(event):
         item = tree.identify_row(event.y)
         if item:
-            column = tree.identify_column(event.x)
-            if column == "#1":  # Name column clicked
-                open_file(tree.item(item, "values")[0])
-            elif column == "#3":  # Remove column clicked
-                remove_file(tree.item(item, "values")[0], frame, root)
-                tree.delete(item)
+            open_file(tree.item(item, "values")[0])
 
-    tree.bind("<Button-1>", on_click)
-
-    # Add Button
-    add_button = tk.Button(frame, text="Add File", font=("Arial", 16), command=lambda: handle_add_file(frame, root))
-    add_button.pack(fill=tk.X)
+    tree.bind("<Double-Button-1>", handle_open_file)
 
 
-def handle_add_file(table_frame, root):
-    global timer
-    timer.cancel()
+def remove_selected():
+    selected_items = synced_tree.selection()
+    selected_files = [synced_tree.item(item, "values")[0] for item in selected_items]
+    remove_files(selected_files)
+    for item in reversed(selected_items):
+        synced_tree.delete(item)
+    refresh_unsynced_files()
+
+def handle_add_file():
+    stop_timer()
     
     dialog = tk.Toplevel()
     dialog.title("Add file")
@@ -101,13 +89,13 @@ def handle_add_file(table_frame, root):
     dialog.transient(root)
     open_add_file_dialog(dialog)
     root.wait_window(dialog)
-    refresh_table(table_frame, root, force_refresh_window=True)
+    refresh_table(force_refresh_window=True)
 
-    timer = get_new_timer(table_frame, root)
+    start_new_timer()
     
 
 # delete uncynced files
-def delete_unsynced_files(table_frame):
+def delete_unsynced_files():
     # show a popup asking if sure
     # delete all files that are not in the config
     response = tk.messagebox.askyesno("Delete Unsynced Files", "Are you sure you want to delete all unsynced files?")
@@ -119,37 +107,61 @@ def delete_unsynced_files(table_frame):
     for file in unsynced_files:
         delete_file(path.join(dir, file))
         print(f'Deleted file {file}')
-    refresh_table(table_frame, root, force_refresh_window=True)
+    refresh_table(force_refresh_window=True)
 
 def refresh_unsynced_files():
-    global listbox
     listbox.delete(0, tk.END)
     dir, unsynced_files = get_unsynced_files()
     for file in unsynced_files:
         listbox.insert(tk.END, file)
 
+def build_toolbar(toolbar):
+    btn_add = tk.Button(toolbar, text="➕", font=("Arial", 6, "bold"), fg="green", command=handle_add_file)
+    btn_add.pack(side=tk.LEFT, padx=5, pady=3)
+    btn_remove = tk.Button(toolbar, text="❌", font=("Arial", 6, "bold"), fg="red", command=remove_selected)
+    btn_remove.pack(side=tk.LEFT, padx=5, pady=3)
+
+def create_synced_files_frame(window):
+    synced_files_frame = tk.Frame(window)
+    window.add(synced_files_frame)
+    
+    toolbar = tk.Frame(synced_files_frame, relief=tk.RAISED, bd=2)
+    toolbar.pack(fill=tk.X)
+    build_toolbar(toolbar)
+    
+    global synced_tree
+    synced_tree = ttk.Treeview(synced_files_frame, columns=("Name", "Timestamp"), show="headings")
+    
+    synced_tree.heading("Name", text="Name")
+    synced_tree.heading("Timestamp", text="Timestamp")
+    synced_tree.column("Name", anchor="w")
+    synced_tree.column("Timestamp", anchor="w")
+    create_table()
+
+def create_unsynced_files_frame(window):
+    global listbox
+    unsynced_files_frame = tk.Frame(window)
+    listbox = tk.Listbox(unsynced_files_frame)
+    listbox.pack(fill=tk.BOTH, expand=True)
+
+    delete_unsynced_files_btn = tk.Button(unsynced_files_frame, text="Delete Unsynced Files", command=delete_unsynced_files)
+    delete_unsynced_files_btn.pack(side=tk.BOTTOM)
+    refresh_unsynced_files()
+    window.add(unsynced_files_frame)
+
 def main():
+    global root
     root = tk.Tk()
     root.geometry("600x400")
+    root.title("Auto-upload manager")
 
     paned_window = tk.PanedWindow(root, orient=tk.HORIZONTAL)
     paned_window.pack(fill=tk.BOTH, expand=True)
 
+    create_synced_files_frame(paned_window)
+    create_unsynced_files_frame(paned_window)
 
-    synced_files_frame = tk.Frame(paned_window)
-    create_table(synced_files_frame, root)
-    paned_window.add(synced_files_frame)
-
-
-    global listbox
-    unsynced_files_frame = tk.Frame(paned_window)
-    listbox = tk.Listbox(unsynced_files_frame)
-    listbox.pack(fill=tk.BOTH, expand=True)
-    paned_window.add(unsynced_files_frame)
-    refresh_unsynced_files()
-
-    global timer
-    timer = get_new_timer(synced_files_frame, root)
+    start_new_timer()
 
     root.mainloop()
 

@@ -141,9 +141,10 @@ def create_synced_files_frame(window):
 def create_unsynced_files_frame(window):
     global listbox
     unsynced_files_frame = tk.Frame(window)
+    label = tk.Label(unsynced_files_frame, text="Unsynced Files")
+    label.pack(side=tk.TOP, pady=5)
     listbox = tk.Listbox(unsynced_files_frame)
     listbox.pack(fill=tk.BOTH, expand=True)
-
     delete_unsynced_files_btn = tk.Button(unsynced_files_frame, text="Delete Unsynced Files", command=delete_unsynced_files)
     delete_unsynced_files_btn.pack(side=tk.BOTTOM)
     refresh_unsynced_files()

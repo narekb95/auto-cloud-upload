@@ -36,7 +36,7 @@ def create_config_file(target_folder):
         config_data = {
             "target": target_folder,
             "registry": [],
-            "update_task_interval": DEFAULT_TASK_INTERVAL,
+            'update-task-interval': DEFAULT_TASK_INTERVAL,
             "last-check": 0,
         }
     print(f"Creating config file at {_config_file}")

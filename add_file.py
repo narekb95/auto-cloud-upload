@@ -24,7 +24,7 @@ def add_file(path, name):
         raise ValueError(f'File {name} already exists in auto-upload.')
     config.files.append({'path': path, 'name': name})
     config.update_config()
-    updated = update_files()
+    updated, _ = update_files()
     assert(updated)
 
 def update_path(path_var):

@@ -47,12 +47,12 @@ def remove_files(files):
     start_new_timer()
 
 
-# force is used on add/remove since config is already updated there
-def refresh_table(force_refresh_window=False):
-    if update_files(last_update = last_update) or force_refresh_window:
+def refresh_table():
+    global last_update
+    file_updated, last_update = update_files(last_update = last_update)
+    if file_updated:
         synced_tree.delete(*synced_tree.get_children())
         create_table()
-        refresh_unsynced_files()
 
 def create_table():
     data = get_data()
@@ -93,7 +93,6 @@ def remove_selected():
 
 def handle_add_file():
     stop_timer()
-    
     dialog = tk.Toplevel()
     dialog.title("Add file")
     dialog.geometry("600x400")
@@ -102,8 +101,7 @@ def handle_add_file():
     dialog.focus_set()
     open_add_file_dialog(dialog)
     root.wait_window(dialog)
-    refresh_table(force_refresh_window=True)
-
+    refresh_table()
     start_new_timer()
     
 
@@ -120,7 +118,7 @@ def delete_unsynced_files():
     for file in unsynced_files:
         delete_file(path.join(dir, file))
         print(f'Deleted file {file}')
-    refresh_table(force_refresh_window=True)
+    refresh_unsynced_files()
 
 def refresh_unsynced_files():
     listbox.delete(0, tk.END)

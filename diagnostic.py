@@ -9,9 +9,9 @@ from helpers import timestamp_to_date, RepeatTimer, get_unsynced_files
 from add_file import open_add_file_dialog
 from update_files import update_files
 
-DEFAULT_CHECK_INTERVAL = 5
+DEFAULT_CHECK_INTERVAL = 10
 
-last_update = 0
+last_check = 0
 
 def start_new_timer():
     global timer
@@ -48,11 +48,13 @@ def remove_files(files):
 
 
 def refresh_table():
-    global last_update
-    file_updated, last_update = update_files(last_update = last_update)
+    global last_check
+    file_updated, last_check = update_files(last_check= last_check)
     if file_updated:
+        print("Files updated")
         synced_tree.delete(*synced_tree.get_children())
         create_table()
+    refresh_unsynced_files()
 
 def create_table():
     data = get_data()

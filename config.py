@@ -1,5 +1,6 @@
 import os
 import json
+import time
 
 from enum import Enum
 import helpers
@@ -37,7 +38,7 @@ def create_config_file(target_folder):
             "target": target_folder,
             "registry": [],
             'update-task-interval': DEFAULT_TASK_INTERVAL,
-            "last-check": 0,
+            "last-update": 0,
         }
     print(f"Creating config file at {_config_file}")
     os.makedirs(helpers.App_Data, exist_ok=True)
@@ -57,19 +58,21 @@ class Config:
         self.target_dir = config['target']
         self.files = config['registry']
         self.update_task_interval = config['update-task-interval']
-        self.last_check = config['last-check']
+        self.last_update = config['last-update']
 
     def read_config(self):
         with open(_config_file, 'r') as f:
             return json.load(f)
 
+    # Only call if something really changed
     def update_config(self):
         assert self.locked
+        self.last_update = int(time.time())
         with open(_config_file, 'w') as f:
             json.dump({
                 'target': self.target_dir,
                 'registry': self.files,
                 'update-task-interval': self.update_task_interval,
-                'last-check': self.last_check,
+                'last-update': self.last_update
             }, f)
         self.lock.release()

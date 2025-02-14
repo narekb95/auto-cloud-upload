@@ -1,4 +1,5 @@
 from sys import argv
+import os
 
 from config import Config
 import tkinter as tk
@@ -22,7 +23,7 @@ def add_file(path, name):
     file = next((file for file in config.files if file['name'].lower() == name), None)
     if file is not None:
         raise ValueError(f'File {name} already exists in auto-upload.')
-    config.files.append({'path': path, 'name': name})
+    config.files.append({'path': path, 'name': name, 'last-update': 0})
     config.update_config()
     updated, _ = update_files()
     assert(updated)
@@ -39,7 +40,7 @@ def handle_submit(path, name, error_var, dialog):
     except ValueError as e:
         error_var.set(e)
 
-def open_add_file_dialog(dialog, path=''):
+def open_add_file_dialog(dialog, path='', file_name=''):
 
     path_var = tk.StringVar(value=path)
     error_var = tk.StringVar(value='')
@@ -63,7 +64,10 @@ def open_add_file_dialog(dialog, path=''):
     label_name.grid(row=0, column=0, padx=5, pady=5, sticky="w")
 
     entry_name = tk.Entry(frame_name, font=font_main, width=30)
+    entry_name.insert(0, file_name)
     entry_name.grid(row=0, column=1, padx=5, pady=5, sticky="w")
+    entry_name.focus_set()
+    entry_name.selection_range(0, tk.END)
 
    # Error Message Frame
     frame_error = tk.Frame(dialog, bg="#f4f4f4")
@@ -79,14 +83,17 @@ def open_add_file_dialog(dialog, path=''):
     dialog.bind('<Escape>', lambda e: dialog.destroy())
     dialog.bind('<Return>', lambda e: handle_submit(path_var.get(), entry_name.get(), error_var, dialog))
 
+
 def main():
     path = argv[1] if len(argv) > 1 else ''
+    file = os.path.basename(path)
+    file_name = os.path.splitext(file)[0]
 
     root = tk.Tk()
     root.title("Add file")
     root.geometry("600x400")
 
-    open_add_file_dialog(root, path)
+    open_add_file_dialog(root, path, file_name)
     root.mainloop()
 
 if __name__ == '__main__':

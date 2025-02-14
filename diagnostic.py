@@ -127,10 +127,12 @@ def refresh_unsynced_files():
         listbox.insert(tk.END, file)
 
 def build_toolbar(toolbar):
-    btn_add = tk.Button(toolbar, text="➕", font=("Arial", 6, "bold"), fg="green", command=handle_add_file)
-    btn_add.pack(side=tk.LEFT, padx=5, pady=3)
+    label = tk.Label(toolbar, text="Synced Files")
+    label.pack(side=tk.LEFT, pady=5)
     btn_remove = tk.Button(toolbar, text="❌", font=("Arial", 6, "bold"), fg="red", command=remove_selected)
-    btn_remove.pack(side=tk.LEFT, padx=5, pady=3)
+    btn_remove.pack(side=tk.RIGHT, padx=5, pady=3)
+    btn_add = tk.Button(toolbar, text="➕", font=("Arial", 6, "bold"), fg="green", command=handle_add_file)
+    btn_add.pack(side=tk.RIGHT, padx=5)
 
 def create_synced_files_frame(window):
     synced_files_frame = tk.Frame(window)

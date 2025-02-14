@@ -14,7 +14,7 @@ def file_exists_and_changed(last_check, file):
 
 
 def update_files():
-    config = cnf.Config()
+    config = cnf.Config(update_instance=True)
     target_dir = config.target_dir
     files = config.files
 

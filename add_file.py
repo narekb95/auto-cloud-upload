@@ -16,7 +16,7 @@ def add_file(path, name):
     if  not name_reg.match(name):
         raise ValueError('Invalid file name.')
 
-    config = Config()
+    config = Config(update_instance=True)
     extension = path.split('.')[-1]
     name = (f'{name}.{extension}').lower()
     file = next((file for file in config.files if file['name'].lower() == name), None)

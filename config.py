@@ -43,9 +43,16 @@ def create_config_file(target_folder):
     os.makedirs(helpers.App_Data, exist_ok=True)
     with open(_config_file, 'w') as f:
         json.dump(config_data, f)
-        
+
 class Config:
-    def __init__(self):
+    def __init__(self, update_instance=False):
+        self.lock = FileLock(f"{_config_file}.lock")
+        if update_instance:
+            self.lock.acquire()
+            self.locked = True
+        else:
+            self.locked = False
+
         config = self.read_config()
         self.target_dir = config['target']
         self.files = config['registry']
@@ -57,12 +64,12 @@ class Config:
             return json.load(f)
 
     def update_config(self):
-        lock = FileLock(f"{_config_file}.lock")
-        with lock:
-            with open(_config_file, 'w') as f:
-                json.dump({
-                    'target': self.target_dir,
-                    'registry': self.files,
-                    'update-task-interval': self.update_task_interval,
-                    'last-check': self.last_check,
-                }, f)
+        assert self.locked
+        with open(_config_file, 'w') as f:
+            json.dump({
+                'target': self.target_dir,
+                'registry': self.files,
+                'update-task-interval': self.update_task_interval,
+                'last-check': self.last_check,
+            }, f)
+        self.lock.release()

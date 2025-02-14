@@ -37,7 +37,7 @@ def open_file(file_name):
 
 def remove_files(files):
     stop_timer()
-    config = Config()
+    config = Config(update_instance=True)
     deleted_files = [file for file in config.files if file['name'] in files]
     for file in deleted_files:
         config.files.remove(file)

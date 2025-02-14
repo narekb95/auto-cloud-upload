@@ -130,7 +130,7 @@ def build_toolbar(toolbar):
     label = tk.Label(toolbar, text="Synced Files")
     label.pack(side=tk.LEFT, pady=5)
     btn_remove = tk.Button(toolbar, text="❌", font=("Arial", 6, "bold"), fg="red", command=remove_selected)
-    btn_remove.pack(side=tk.RIGHT, padx=5, pady=3)
+    btn_remove.pack(side=tk.RIGHT, padx=5)
     btn_add = tk.Button(toolbar, text="➕", font=("Arial", 6, "bold"), fg="green", command=handle_add_file)
     btn_add.pack(side=tk.RIGHT, padx=5)
 
@@ -154,12 +154,16 @@ def create_synced_files_frame(window):
 def create_unsynced_files_frame(window):
     global listbox
     unsynced_files_frame = tk.Frame(window)
-    label = tk.Label(unsynced_files_frame, text="Unsynced Files")
-    label.pack(side=tk.TOP, pady=5)
+
+    label_frame = tk.Frame(unsynced_files_frame)
+    label_frame.pack(fill=tk.X)
+    label = tk.Label(label_frame, text="Unsynced Files")
+    label.pack(pady=7)
+    
     listbox = tk.Listbox(unsynced_files_frame)
     listbox.pack(fill=tk.BOTH, expand=True)
     delete_unsynced_files_btn = tk.Button(unsynced_files_frame, text="Delete Unsynced Files", command=delete_unsynced_files)
-    delete_unsynced_files_btn.pack(side=tk.BOTTOM)
+    delete_unsynced_files_btn.pack(side=tk.BOTTOM, pady=5)
     refresh_unsynced_files()
     window.add(unsynced_files_frame)
 

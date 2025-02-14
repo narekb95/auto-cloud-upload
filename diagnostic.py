@@ -11,6 +11,8 @@ from update_files import update_files
 
 DEFAULT_CHECK_INTERVAL = 5
 
+last_update = 0
+
 def start_new_timer():
     global timer
     timer = RepeatTimer(DEFAULT_CHECK_INTERVAL, refresh_table)
@@ -47,7 +49,7 @@ def remove_files(files):
 
 # force is used on add/remove since config is already updated there
 def refresh_table(force_refresh_window=False):
-    if update_files() or force_refresh_window:
+    if update_files(last_update = last_update) or force_refresh_window:
         synced_tree.delete(*synced_tree.get_children())
         create_table()
         refresh_unsynced_files()

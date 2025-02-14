@@ -87,6 +87,8 @@ def handle_add_file():
     dialog.title("Add file")
     dialog.geometry("600x400")
     dialog.transient(root)
+    dialog.grab_set()
+    dialog.focus_set()
     open_add_file_dialog(dialog)
     root.wait_window(dialog)
     refresh_table(force_refresh_window=True)
@@ -155,6 +157,7 @@ def main():
     root = tk.Tk()
     root.geometry("600x400")
     root.title("Auto-upload manager")
+    root.bind("<Escape>", lambda e: root.destroy())
 
     paned_window = tk.PanedWindow(root, orient=tk.HORIZONTAL)
     paned_window.pack(fill=tk.BOTH, expand=True)

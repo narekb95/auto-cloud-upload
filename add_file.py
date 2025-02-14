@@ -6,7 +6,16 @@ from tkinter import filedialog
 
 from update_files import update_files
 
+import re
+
 def add_file(path, name):
+    name = name.strip()
+    name_reg = re.compile(r'^[a-zA-Z0-9_\-\. ]+$')
+    if path == '':
+        raise ValueError('No file selected.')
+    if  not name_reg.match(name):
+        raise ValueError('Invalid file name.')
+
     config = Config()
     extension = path.split('.')[-1]
     name = (f'{name}.{extension}').lower()
@@ -31,6 +40,7 @@ def handle_submit(path, name, error_var, dialog):
         error_var.set(e)
 
 def open_add_file_dialog(dialog, path=''):
+
     path_var = tk.StringVar(value=path)
     error_var = tk.StringVar(value='')
     font_main = ("Arial", 14)
@@ -64,6 +74,10 @@ def open_add_file_dialog(dialog, path=''):
 
     submit_button = tk.Button(dialog, text="Submit", font=font_main, command=lambda: handle_submit(path_var.get(), entry_name.get(), error_var, dialog))
     submit_button.pack(pady=10)
+
+    
+    dialog.bind('<Escape>', lambda e: dialog.destroy())
+    dialog.bind('<Return>', lambda e: handle_submit(path_var.get(), entry_name.get(), error_var, dialog))
 
 def main():
     path = argv[1] if len(argv) > 1 else ''

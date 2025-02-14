@@ -63,14 +63,23 @@ def create_table():
 
     tree.pack(fill=tk.BOTH, expand=True)
 
-    # Bind Events
-    def handle_open_file(event):
+    def open_by_clique(event):
         item = tree.identify_row(event.y)
         if item:
             open_file(tree.item(item, "values")[0])
 
-    tree.bind("<Double-Button-1>", handle_open_file)
+    tree.bind("<Double-Button-1>", open_by_clique)
+    # if empty area is clicked, deselect all
+    def empty_click_handler(event):
+        item = tree.identify_row(event.y)
+        if not item:
+            tree.selection_remove(tree.selection())
+    tree.bind("<Button-1>", empty_click_handler)
 
+def open_selected():
+    selected_files = [synced_tree.item(item, "values")[0] for item in synced_tree.selection()]
+    for file in selected_files:
+        open_file(file)
 
 def remove_selected():
     selected_items = synced_tree.selection()
@@ -158,10 +167,12 @@ def main():
     root.geometry("600x400")
     root.title("Auto-upload manager")
     root.bind("<Escape>", lambda e: root.destroy())
+    # on delete clique handle remove
+    root.bind("<Delete>", lambda e: remove_selected())
+    root.bind("<Return>", lambda e: open_selected())
 
     paned_window = tk.PanedWindow(root, orient=tk.HORIZONTAL)
     paned_window.pack(fill=tk.BOTH, expand=True)
-
     create_synced_files_frame(paned_window)
     create_unsynced_files_frame(paned_window)
 

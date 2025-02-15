@@ -13,6 +13,8 @@ DEFAULT_CHECK_INTERVAL = 10
 
 last_check = 0
 
+DEFAULT_FONT = ("Arial", 10)
+
 def start_new_timer():
     global timer
     timer = RepeatTimer(DEFAULT_CHECK_INTERVAL, refresh_table)
@@ -122,8 +124,8 @@ def build_toolbar(toolbar):
         handle_add_file(root)
         refresh_table()
         start_new_timer()
-    label = tk.Label(toolbar, text="Synced Files")
-    label.pack(side=tk.LEFT, pady=5)
+    label = tk.Label(toolbar, text="Synced Files", font=('Arial', 8))
+    label.pack(side=tk.LEFT, pady=1)
     btn_remove = tk.Button(toolbar, text="❌", font=("Arial", 6, "bold"), fg="red", command=remove_selected)
     btn_remove.pack(side=tk.RIGHT, padx=5)
     btn_add = tk.Button(toolbar, text="➕", font=("Arial", 6, "bold"), fg="green", command=on_add_file)
@@ -150,17 +152,17 @@ def create_unsynced_files_frame(window):
     global listbox
     unsynced_files_frame = tk.Frame(window)
 
-    label_frame = tk.Frame(unsynced_files_frame)
+    label_frame = tk.Frame(unsynced_files_frame, relief=tk.RAISED, bd=2)
     label_frame.pack(fill=tk.X)
-    label = tk.Label(label_frame, text="Unsynced Files")
-    label.pack(pady=7)
+    label = tk.Label(label_frame, text="Unsynced Files", font=('Arial', 8))
+    label.pack(pady=1)
     
-    listbox = tk.Listbox(unsynced_files_frame)
+    listbox = tk.Listbox(unsynced_files_frame, font=DEFAULT_FONT)
     listbox.pack(fill=tk.BOTH, expand=True)
-    delete_unsynced_files_btn = tk.Button(unsynced_files_frame, text="Delete Unsynced Files", command=delete_unsynced_files)
-    delete_unsynced_files_btn.pack(side=tk.BOTTOM, pady=5)
+    delete_unsynced_files_btn = tk.Button(unsynced_files_frame, text="Delete", command=delete_unsynced_files)
+    delete_unsynced_files_btn.pack(side=tk.BOTTOM, padx=5, pady=5, anchor=tk.E)
     refresh_unsynced_files()
-    window.add(unsynced_files_frame)
+    window.add(unsynced_files_frame, minsize=175)
 
 def main():
     global root
@@ -168,17 +170,16 @@ def main():
     root.geometry("600x400")
     root.title("Auto-upload manager")
     root.bind("<Escape>", lambda e: root.destroy())
-    # on delete clique handle remove
     root.bind("<Delete>", lambda e: remove_selected())
     root.bind("<Return>", lambda e: open_selected())
 
+    ttk.Style().configure("Treeview", font=DEFAULT_FONT)
     paned_window = tk.PanedWindow(root, orient=tk.HORIZONTAL)
     paned_window.pack(fill=tk.BOTH, expand=True)
-    create_synced_files_frame(paned_window)
     create_unsynced_files_frame(paned_window)
+    create_synced_files_frame(paned_window)
 
     start_new_timer()
-
     root.mainloop()
 
 if __name__ == "__main__":

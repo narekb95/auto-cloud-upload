@@ -17,20 +17,20 @@ def get_current_settings():
                  for label, attribute in settings_items]
     return settings
 
-def update_settings(settings):
-    config = cnf.Config(update_instance=True)
-    old_dir = config.target_dir
-    for setting in settings:
-        print(setting.attribute, setting.var.get())
-        setattr(config, setting.attribute, setting.var.get())
-    if old_dir != config.target_dir:
-        config.reset_files()
-    config.update_config()
+def update_settings(settings, config):
+    with config.lock:
+        config.read_config()
+        old_dir = config.target_dir
+        for setting in settings:
+            setattr(config, setting.attribute, setting.var.get())
+        if old_dir != config.target_dir:
+            config.reset_files()
+        config.update_config()
 
-def create_settings_window(dialog):
+def create_settings_window(dialog, config):
     def submit():
         print("Submitted")
-        update_settings(settings)
+        update_settings(settings, config)
         dialog.destroy()
 
     dialog.title("Add file")
@@ -58,12 +58,12 @@ def create_settings_window(dialog):
     tk.Frame(dialog).pack(pady=8)
         
     
-def handle_settings_request(root):
+def handle_settings_request(root, config):
     dialog = tk.Toplevel()
     dialog.transient(root)
     dialog.grab_set()
     dialog.focus_set()
-    create_settings_window(dialog)
+    create_settings_window(dialog, config)
     root.wait_window(dialog)
 
 def main():

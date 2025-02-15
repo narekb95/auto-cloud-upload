@@ -46,25 +46,21 @@ def create_config_file(target_folder):
         json.dump(config_data, f)
 
 class Config:
-    def __init__(self, update_instance=False):
+    def __init__(self):
         self.lock = FileLock(f"{_config_file}.lock")
-        if update_instance:
-            self.lock.acquire()
-            self.locked = True
-        else:
-            self.locked = False
+        self.read_config()
 
-        config = self.read_config()
+
+    def read_config(self):
+        config = None
+        with open(_config_file, 'r') as f:
+            config = json.load(f)
+        
         self.target_dir = config['target']
         self.files = config['registry']
         self.last_update = config['last-update']
         self.update_frequency = config.get('update-frequency', 10)
         self.scheduler_frequency = config.get('scheduler-frequency', 60)
-
-
-    def read_config(self):
-        with open(_config_file, 'r') as f:
-            return json.load(f)
 
     def reset_files(self):
         for file in self.files:
@@ -73,7 +69,7 @@ class Config:
 
     # Only call if something really changed
     def update_config(self):
-        assert self.locked
+        assert self.lock.is_locked
         self.last_update = int(time.time())
         with open(_config_file, 'w') as f:
             json.dump({
@@ -83,4 +79,3 @@ class Config:
                 'update-frequency': self.update_frequency,
                 'scheduler-frequency': self.scheduler_frequency
             }, f)
-        self.lock.release()

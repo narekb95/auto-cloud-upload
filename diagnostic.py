@@ -16,6 +16,8 @@ last_check = 0
 
 DEFAULT_FONT = ("Arial", 10)
 
+config = Config()
+
 def start_new_timer():
     global timer
     timer = RepeatTimer(DEFAULT_CHECK_INTERVAL, refresh_table)
@@ -27,7 +29,6 @@ def stop_timer():
     timer.cancel()
 
 def get_data():
-    config = Config()
     files = sorted(config.files, key=lambda f: f['last-update'] if 'last-update' in f else 0, reverse=True)
     return list(map(lambda f: {
         'name': f['name'],
@@ -36,24 +37,23 @@ def get_data():
         }, files))
 
 def open_file(file_name):
-    config = Config()
     file_path = path.join(config.target_dir, file_name)
     helpers.open_file(file_path)
 
 def remove_files(files):
     stop_timer()
-    config = Config(update_instance=True)
-    deleted_files = [file for file in config.files if file['name'] in files]
-    for file in deleted_files:
-        config.files.remove(file)
-    config.update_config()
-    start_new_timer()
-
+    with config.lock:
+        config.read_config()
+        deleted_files = [file for file in config.files if file['name'] in files]
+        for file in deleted_files:
+            config.files.remove(file)
+        config.update_config()
+        start_new_timer()
 
 def refresh_table():
     global last_check
-    file_updated, last_check = update_files(last_check= last_check)
-    if file_updated:
+    update_files(config)
+    if config.last_update > last_check:
         print("Files updated")
         synced_tree.delete(*synced_tree.get_children())
         create_table()
@@ -122,7 +122,7 @@ def refresh_unsynced_files():
 
 def on_add_file():
     stop_timer()
-    handle_add_file(root)
+    handle_add_file(root, config)
     refresh_table()
     start_new_timer()
 
@@ -167,7 +167,7 @@ def create_unsynced_files_frame(window):
 
 def on_settings_click():
     stop_timer()
-    handle_settings_request(root)
+    handle_settings_request(root, config)
     refresh_table()
     start_new_timer()
 

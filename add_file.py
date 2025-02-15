@@ -14,39 +14,40 @@ class SyncFile:
         self.path = tk.StringVar(value=path)
         self.name = tk.StringVar(value=name)
 
-def add_files(rows):
-    config = Config(update_instance=True)
-    for row in reversed(rows):
-        if row.removed:
-            continue
-        file = row.file
-        path = file.path.get()
-        name = file.name.get() 
-        extension = path.split('.')[-1]
-        name = name.strip()
-        name = (f'{name}.{extension}').lower()
+def add_files(rows, config):
+    with config.lock:
+        config.read_config()
+        for row in reversed(rows):
+            if row.removed:
+                continue
+            file = row.file
+            path = file.path.get()
+            name = file.name.get() 
+            extension = path.split('.')[-1]
+            name = name.strip()
+            name = (f'{name}.{extension}').lower()
 
-        name_reg = re.compile(r'^[a-zA-Z0-9_\-\. ]+$')
-        if path == '':
-            row.err_var.set('No file selected.')
-            continue
-        if  not name_reg.match(name):
-            row.err_var.set('Invalid file name.')
-            continue
+            name_reg = re.compile(r'^[a-zA-Z0-9_\-\. ]+$')
+            if path == '':
+                row.err_var.set('No file selected.')
+                continue
+            if  not name_reg.match(name):
+                row.err_var.set('Invalid file name.')
+                continue
 
-        file = next((file for file in config.files if file['name'].lower() == name), None)
-        if file is not None:
-            row.err_var.set(f'File {name} already exists in auto-upload.')
-            continue
+            file = next((file for file in config.files if file['name'].lower() == name), None)
+            if file is not None:
+                row.err_var.set(f'File {name} already exists in auto-upload.')
+                continue
 
-        config.files.append({'path': path, 'name': name, 'last-update': 0})
-        row.removed = True
+            config.files.append({'path': path, 'name': name, 'last-update': 0})
+            row.removed = True
 
-    config.update_config()
+        config.update_config()
 
-def update_path(path_var):
-    newpath = filedialog.askopenfilename()
-    path_var.set(newpath)
+# def update_path(path_var):
+#     newpath = filedialog.askopenfilename()
+#     path_var.set(newpath)
 
 def shorten_path(path):
     return path if len(path) < 40 else f'{path[:10]}...{path[-30:]}'
@@ -66,7 +67,7 @@ def remove_removed_rows(rows):
     return rows
             
 
-def open_add_file_dialog(dialog, files):    
+def open_add_file_dialog(dialog, files, config):    
     class Row:
         def __init__(self, file, index, root):
             self.file = file
@@ -97,11 +98,10 @@ def open_add_file_dialog(dialog, files):
     rows[0].name_entry.focus_set()
     rows[0].name_entry.selection_range(0, tk.END)
 
-    def on_submit(rows):
-        add_files(rows)
+    def on_submit(rows, config):
+        add_files(rows, config)
         if all(row.removed for row in rows):
-            updated, _ = update_files()
-            assert(updated)
+            update_files(config)
             dialog.destroy()
         rows = remove_removed_rows(rows)
     
@@ -114,7 +114,7 @@ def open_add_file_dialog(dialog, files):
         pack_buttons()
                 
     add_files_button = tk.Button(dialog, text="Add files", font=("Ariel", 9), command=add_more_files)
-    submit_button = tk.Button(dialog, text="Submit", font=("Arial", 10), command=lambda rows = rows: on_submit(rows))
+    submit_button = tk.Button(dialog, text="Submit", font=("Arial", 10), command=lambda rows = rows, config=config: on_submit(rows, config))
 
     
     def pack_buttons():
@@ -122,13 +122,13 @@ def open_add_file_dialog(dialog, files):
         submit_button.grid(row=len(rows)+1,column=0, columnspan=3, padx=20, pady=10, sticky="e")
     pack_buttons()
 
-    dialog.bind('<Return>', lambda _, rows=rows : on_submit(rows))
+    dialog.bind('<Return>', lambda _, rows=rows, config=config : on_submit(rows, config))
     dialog.bind('<Escape>', lambda _: dialog.destroy())
 
 def get_name_without_extension(path):
     return os.path.splitext(os.path.basename(path))[0] if path != '' else ''
 
-def handle_add_file(root):
+def handle_add_file(root, config):
     path = filedialog.askopenfilenames()
     if(len(path) == 0):
         return
@@ -141,7 +141,7 @@ def handle_add_file(root):
     dialog.transient(root)
     dialog.grab_set()
     dialog.focus_set()
-    open_add_file_dialog(dialog, files)
+    open_add_file_dialog(dialog, files, config)
     root.wait_window(dialog)
 
 def main():

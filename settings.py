@@ -1,0 +1,75 @@
+import tkinter as tk
+import config as cnf
+
+class Setting:
+    def __init__(self, label, attribute, value):
+        self.label = label
+        self.attribute = attribute
+        self.var = tk.StringVar(value=value)
+
+def get_current_settings():
+    config = cnf.Config()
+    settings_items = [
+        ("Target folder", "target_dir"),
+        ("Update frequency", "update_frequency"),
+        ("Scheduler frequency", "scheduler_frequency")]
+    settings = [Setting(label, attribute, getattr(config, attribute))\
+                 for label, attribute in settings_items]
+    return settings
+
+def update_settings(settings):
+    config = cnf.Config(update_instance=True)
+    old_dir = config.target_dir
+    for setting in settings:
+        print(setting.attribute, setting.var.get())
+        setattr(config, setting.attribute, setting.var.get())
+    if old_dir != config.target_dir:
+        config.reset_files()
+    config.update_config()
+
+def create_settings_window(dialog):
+    def submit():
+        print("Submitted")
+        update_settings(settings)
+        dialog.destroy()
+
+    dialog.title("Add file")
+
+    settings_frame = tk.Frame(dialog)
+    settings_frame.pack(fill=tk.X, expand=True, anchor="n", padx=30, pady=10)
+    settings_frame.columnconfigure(0, weight=0)
+    settings_frame.columnconfigure(1, weight=1)
+    settings = get_current_settings()
+    for i, setting in enumerate(settings):
+        tk.Label(settings_frame, text=setting.label, font=('Ariel', 10))\
+            .grid(row=i, column=0, padx=10, pady=10, sticky="w")
+        setting_entry = tk.Entry(settings_frame, textvariable=setting.var,\
+                width = 30, font=('Ariel', 10))
+        setting_entry.grid(row=i, column=1, padx=10, pady=10, sticky="ew")
+        if i == 0:
+            setting_entry.focus_set()
+            setting_entry.select_range(0, tk.END)
+
+    submit_frame = tk.Frame(dialog)
+    submit_frame.pack(expand=True)
+    tk.Button(submit_frame, text="Submit", command=submit).pack()
+    dialog.bind('<Escape>', lambda _: dialog.destroy())
+    dialog.bind('<Return>', lambda _: submit())
+    tk.Frame(dialog).pack(pady=8)
+        
+    
+def handle_settings_request(root):
+    dialog = tk.Toplevel()
+    dialog.transient(root)
+    dialog.grab_set()
+    dialog.focus_set()
+    create_settings_window(dialog)
+    root.wait_window(dialog)
+
+def main():
+    root = tk.Tk()
+    create_settings_window(root)
+    root.mainloop()
+
+if __name__ == '__main__':
+    main()

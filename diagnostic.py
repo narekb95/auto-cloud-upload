@@ -6,6 +6,7 @@ from os import remove as delete_file
 from config import Config
 import helpers
 from add_file import handle_add_file
+from settings import handle_settings_request
 from helpers import timestamp_to_date, RepeatTimer, get_unsynced_files
 from update_files import update_files
 
@@ -118,12 +119,13 @@ def refresh_unsynced_files():
         listbox.insert(tk.END, file)
 
 
+def on_add_file():
+    stop_timer()
+    handle_add_file(root)
+    refresh_table()
+    start_new_timer()
+
 def build_toolbar(toolbar):
-    def on_add_file():
-        stop_timer()
-        handle_add_file(root)
-        refresh_table()
-        start_new_timer()
     label = tk.Label(toolbar, text="Synced Files", font=('Arial', 8))
     label.pack(side=tk.LEFT, pady=1)
     btn_remove = tk.Button(toolbar, text="❌", font=("Arial", 6, "bold"), fg="red", command=remove_selected)
@@ -146,7 +148,7 @@ def create_synced_files_frame(window):
     synced_tree.heading("Timestamp", text="Timestamp")
     synced_tree.column("Name", anchor="w")
     synced_tree.column("Timestamp", anchor="w")
-    create_table()
+    refresh_table()
 
 def create_unsynced_files_frame(window):
     global listbox
@@ -164,6 +166,12 @@ def create_unsynced_files_frame(window):
     refresh_unsynced_files()
     window.add(unsynced_files_frame, minsize=175)
 
+def open_settings():
+    stop_timer()
+    handle_settings_request(root)
+    refresh_table()
+    start_new_timer()
+
 def main():
     global root
     root = tk.Tk()
@@ -178,6 +186,19 @@ def main():
     paned_window.pack(fill=tk.BOTH, expand=True)
     create_unsynced_files_frame(paned_window)
     create_synced_files_frame(paned_window)
+
+    menu_bar = tk.Menu(root)
+
+    file_menu = tk.Menu(menu_bar, tearoff=0)
+    file_menu.add_command(label="Add File", command=on_add_file)
+    file_menu.add_command(label="Delete Unsynced", command=delete_unsynced_files)
+    file_menu.add_separator()
+    file_menu.add_command(label="Settings", command=open_settings)
+
+    menu_bar.add_cascade(label="File", menu=file_menu)
+
+    # ---- Attach Menu to Root Window ----
+    root.config(menu=menu_bar)
 
     start_new_timer()
     root.mainloop()

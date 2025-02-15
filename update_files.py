@@ -29,6 +29,7 @@ def update_files(last_check = math.inf):
         target_file = os.path.join(target_dir, name)
         if file_exists_and_changed(file_last_update, path):
             files_updated = True
+            print(path, target_file)
             copyfile(path, target_file)
             file['last-update'] = curr_timestamp
             print(f'File {name} updated.')

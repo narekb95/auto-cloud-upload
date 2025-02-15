@@ -10,15 +10,19 @@ from filelock import FileLock
 _config_file_name = 'config.json'
 _config_file = os.path.join(helpers.App_Data, _config_file_name)
 
-DEFAULT_TASK_INTERVAL = 60
+DEFAULT_CONFIG = {    
+            "target": '',
+            "registry": [],
+            "last-update": 0,
+            "update-frequency": 10,
+            "scheduler-frequency": 60,
+        }
 
 def create_config_file(target_folder):
     class ResponseEnum(Enum):
         overwrite = 'overwrite'
         update_path = 'update path'
         skip = 'skip'
-
-
     
     response = ResponseEnum.overwrite
     if os.path.exists(_config_file):
@@ -34,12 +38,8 @@ def create_config_file(target_folder):
         for file in config_data['registry']:
             del file['last-update']
     else:
-        config_data = {
-            "target": target_folder,
-            "registry": [],
-            'update-task-interval': DEFAULT_TASK_INTERVAL,
-            "last-update": 0,
-        }
+        config_data = DEFAULT_CONFIG
+        config_data['target'] = target_folder
     print(f"Creating config file at {_config_file}")
     os.makedirs(helpers.App_Data, exist_ok=True)
     with open(_config_file, 'w') as f:
@@ -57,12 +57,19 @@ class Config:
         config = self.read_config()
         self.target_dir = config['target']
         self.files = config['registry']
-        self.update_task_interval = config['update-task-interval']
         self.last_update = config['last-update']
+        self.update_frequency = config.get('update-frequency', 10)
+        self.scheduler_frequency = config.get('scheduler-frequency', 60)
+
 
     def read_config(self):
         with open(_config_file, 'r') as f:
             return json.load(f)
+
+    def reset_files(self):
+        for file in self.files:
+            file['last-update'] = 0
+        self.last_update = 0
 
     # Only call if something really changed
     def update_config(self):
@@ -72,7 +79,8 @@ class Config:
             json.dump({
                 'target': self.target_dir,
                 'registry': self.files,
-                'update-task-interval': self.update_task_interval,
-                'last-update': self.last_update
+                'last-update': self.last_update,
+                'update-frequency': self.update_frequency,
+                'scheduler-frequency': self.scheduler_frequency
             }, f)
         self.lock.release()

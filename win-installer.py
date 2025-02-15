@@ -19,9 +19,9 @@ def create_registry_key(python_path, adder_path):
     winreg.SetValue(command_key, '', winreg.REG_SZ, reg_command)
     print(f'Created registry command: {reg_command} for key: {key_path}')
 
-def create_task(pythonw_path, uploader_path):
+def create_task(pythonw_path, updater):
     task_name = "File Auto Uploader"
-    task_command = f'{pythonw_path} "{uploader_path}"'
+    task_command = f'{pythonw_path} "{updater}"'
     schtasks_command = [
         "schtasks",
         "/Create",
@@ -45,11 +45,11 @@ def run_installer(target_folder):
     python_folder = os.path.dirname(exec_path)
     pythonw_path = os.path.join(python_folder, 'pythonw3.exe')
 
-    uploader_path = os.path.join(installer_dir, 'update_files.py')
+    updater_path = os.path.join(installer_dir, 'update_files.py')
     adder_path = os.path.join(installer_dir, 'add_file.py')
 
     create_registry_key(pythonw_path, adder_path)
-    create_task(pythonw_path, uploader_path)
+    create_task(pythonw_path, updater_path)
     create_config_file(target_folder)
     show_popup()
     exit()

@@ -58,6 +58,7 @@ def refresh_table():
         synced_tree.delete(*synced_tree.get_children())
         create_table()
     refresh_unsynced_files()
+    target_dir_var.set(Config().target_dir)
 
 def create_table():
     data = get_data()
@@ -161,12 +162,10 @@ def create_unsynced_files_frame(window):
     
     listbox = tk.Listbox(unsynced_files_frame, font=DEFAULT_FONT)
     listbox.pack(fill=tk.BOTH, expand=True)
-    delete_unsynced_files_btn = tk.Button(unsynced_files_frame, text="Delete", command=delete_unsynced_files)
-    delete_unsynced_files_btn.pack(side=tk.BOTTOM, padx=5, pady=5, anchor=tk.E)
     refresh_unsynced_files()
     window.add(unsynced_files_frame, minsize=175)
 
-def open_settings():
+def on_settings_click():
     stop_timer()
     handle_settings_request(root)
     refresh_table()
@@ -181,19 +180,26 @@ def main():
     root.bind("<Delete>", lambda e: remove_selected())
     root.bind("<Return>", lambda e: open_selected())
 
+    global target_dir_var
+    target_dir_var = tk.StringVar()
+
     ttk.Style().configure("Treeview", font=DEFAULT_FONT)
     paned_window = tk.PanedWindow(root, orient=tk.HORIZONTAL)
     paned_window.pack(fill=tk.BOTH, expand=True)
     create_unsynced_files_frame(paned_window)
     create_synced_files_frame(paned_window)
 
-    menu_bar = tk.Menu(root)
+    bottom_menu = tk.Frame(root)
+    bottom_menu.pack(fill=tk.X)
+    tk.Label(bottom_menu, text="Target Directory: ", font=DEFAULT_FONT).pack(side=tk.LEFT, padx=5)
+    tk.Label(bottom_menu, textvariable=target_dir_var, font=DEFAULT_FONT).pack(side=tk.LEFT, padx=5)
 
+    menu_bar = tk.Menu(root)
     file_menu = tk.Menu(menu_bar, tearoff=0)
     file_menu.add_command(label="Add File", command=on_add_file)
     file_menu.add_command(label="Delete Unsynced", command=delete_unsynced_files)
     file_menu.add_separator()
-    file_menu.add_command(label="Settings", command=open_settings)
+    file_menu.add_command(label="Settings", command=on_settings_click)
 
     menu_bar.add_cascade(label="File", menu=file_menu)
 

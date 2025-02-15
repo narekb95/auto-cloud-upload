@@ -5,8 +5,8 @@ from os import remove as delete_file
 
 from config import Config
 import helpers
+from add_file import handle_add_file
 from helpers import timestamp_to_date, RepeatTimer, get_unsynced_files
-from add_file import open_add_file_dialog
 from update_files import update_files
 
 DEFAULT_CHECK_INTERVAL = 10
@@ -92,19 +92,6 @@ def remove_selected():
     for item in reversed(selected_items):
         synced_tree.delete(item)
     refresh_unsynced_files()
-
-def handle_add_file():
-    stop_timer()
-    dialog = tk.Toplevel()
-    dialog.title("Add file")
-    dialog.geometry("600x400")
-    dialog.transient(root)
-    dialog.grab_set()
-    dialog.focus_set()
-    open_add_file_dialog(dialog)
-    root.wait_window(dialog)
-    refresh_table()
-    start_new_timer()
     
 
 # delete uncynced files
@@ -128,12 +115,18 @@ def refresh_unsynced_files():
     for file in unsynced_files:
         listbox.insert(tk.END, file)
 
+
 def build_toolbar(toolbar):
+    def on_add_file():
+        stop_timer()
+        handle_add_file(root)
+        refresh_table()
+        start_new_timer()
     label = tk.Label(toolbar, text="Synced Files")
     label.pack(side=tk.LEFT, pady=5)
     btn_remove = tk.Button(toolbar, text="❌", font=("Arial", 6, "bold"), fg="red", command=remove_selected)
     btn_remove.pack(side=tk.RIGHT, padx=5)
-    btn_add = tk.Button(toolbar, text="➕", font=("Arial", 6, "bold"), fg="green", command=handle_add_file)
+    btn_add = tk.Button(toolbar, text="➕", font=("Arial", 6, "bold"), fg="green", command=on_add_file)
     btn_add.pack(side=tk.RIGHT, padx=5)
 
 def create_synced_files_frame(window):

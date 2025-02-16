@@ -108,7 +108,7 @@ def delete_unsynced_files():
     if not response:
         return
     
-    dir, unsynced_files = get_unsynced_files()
+    dir, unsynced_files = get_unsynced_files(config)
     print(unsynced_files)
     for file in unsynced_files:
         delete_file(path.join(dir, file))
@@ -117,7 +117,7 @@ def delete_unsynced_files():
 
 def refresh_unsynced_files():
     listbox.delete(0, tk.END)
-    dir, unsynced_files = get_unsynced_files()
+    dir, unsynced_files = get_unsynced_files(config)
     for file in unsynced_files:
         listbox.insert(tk.END, file)
 

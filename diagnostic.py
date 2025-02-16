@@ -23,6 +23,9 @@ timer = None
 def start_new_timer():
     global config
     global timer
+    
+    if timer:
+        stop_timer()
     timer = RepeatTimer(config.update_frequency, refresh_table)
     timer.daemon = True
     timer.start()
@@ -45,8 +48,8 @@ def open_file(file_name):
     helpers.open_file(file_path)
 
 def remove_files(files):
-    stop_timer()
     with config.lock:
+        stop_timer()
         config.read_config()
         deleted_files = [file for file in config.files if file['name'] in files]
         for file in deleted_files:
@@ -63,7 +66,6 @@ def refresh_table():
         synced_tree.delete(*synced_tree.get_children())
         create_table()
         target_dir_var.set(config.target_dir)
-        stop_timer()
         start_new_timer()
 
     refresh_unsynced_files()
@@ -131,7 +133,10 @@ def refresh_unsynced_files():
 
 def on_add_file():
     stop_timer()
-    handle_add_file(root, config)
+    try:
+        handle_add_file(root, config)
+    except Exception as e:
+        print(e)
     refresh_table()
     start_new_timer()
 

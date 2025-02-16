@@ -7,8 +7,7 @@ class Setting:
         self.attribute = attribute
         self.var = tk.StringVar(value=value)
 
-def get_current_settings():
-    config = cnf.Config()
+def get_current_settings(config):
     settings_items = [
         ("Target folder", "target_dir"),
         ("Update frequency", "update_frequency"),
@@ -39,7 +38,7 @@ def create_settings_window(dialog, config):
     settings_frame.pack(fill=tk.X, expand=True, anchor="n", padx=30, pady=10)
     settings_frame.columnconfigure(0, weight=0)
     settings_frame.columnconfigure(1, weight=1)
-    settings = get_current_settings()
+    settings = get_current_settings(config)
     for i, setting in enumerate(settings):
         tk.Label(settings_frame, text=setting.label, font=('Ariel', 10))\
             .grid(row=i, column=0, padx=10, pady=10, sticky="w")
@@ -68,7 +67,8 @@ def handle_settings_request(root, config):
 
 def main():
     root = tk.Tk()
-    create_settings_window(root)
+    config = cnf.Config()
+    create_settings_window(root, config)
     root.mainloop()
 
 if __name__ == '__main__':

@@ -153,7 +153,8 @@ def main():
     root.geometry("600x400")
 
     file = SyncFile(path, file_name)
-    open_add_file_dialog(root, [file])
+    config = Config()
+    open_add_file_dialog(root, [file], config)
     root.mainloop()
 
 if __name__ == '__main__':

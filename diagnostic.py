@@ -18,15 +18,19 @@ DEFAULT_FONT = ("Arial", 10)
 
 config = Config()
 
+timer = None
+
 def start_new_timer():
+    global config
     global timer
-    timer = RepeatTimer(DEFAULT_CHECK_INTERVAL, refresh_table)
+    timer = RepeatTimer(config.update_frequency, refresh_table)
     timer.daemon = True
     timer.start()
 
 def stop_timer():
     global timer
-    timer.cancel()
+    if timer:
+        timer.cancel()
 
 def get_data():
     files = sorted(config.files, key=lambda f: f['last-update'] if 'last-update' in f else 0, reverse=True)
@@ -59,6 +63,9 @@ def refresh_table():
         synced_tree.delete(*synced_tree.get_children())
         create_table()
         target_dir_var.set(config.target_dir)
+        stop_timer()
+        start_new_timer()
+
     refresh_unsynced_files()
     # set last check to current time
 

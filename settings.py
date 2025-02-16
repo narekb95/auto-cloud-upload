@@ -3,18 +3,19 @@ import config as cnf
 import tkinter.filedialog
 
 class Setting:
-    def __init__(self, label, attribute, value):
+    def __init__(self, label, attribute, value, is_numeric):
         self.label = label
         self.attribute = attribute
         self.var = tk.StringVar(value=value)
+        self.is_numeric = is_numeric
 
 def get_current_settings(config):
     settings_items = [
-        ("Target folder", "target_dir"),
-        ("Update frequency", "update_frequency"),
-        ("Scheduler frequency", "scheduler_frequency")]
-    settings = [Setting(label, attribute, getattr(config, attribute))\
-                 for label, attribute in settings_items]
+        ("Target folder", "target_dir", False),
+        ("Update frequency", "update_frequency", True),
+        ("Scheduler frequency", "scheduler_frequency", True)]
+    settings = [Setting(label, attribute, getattr(config, attribute), is_numeric)\
+                 for label, attribute, is_numeric in settings_items]
     return settings
 
 def update_settings(settings, config):
@@ -22,7 +23,7 @@ def update_settings(settings, config):
         config.read_config()
         old_dir = config.target_dir
         for setting in settings:
-            setattr(config, setting.attribute, setting.var.get())
+            setattr(config, setting.attribute, int(setting.var.get()) if setting.is_numeric else setting.var.get())
         if old_dir != config.target_dir:
             config.reset_files()
         config.update_config()

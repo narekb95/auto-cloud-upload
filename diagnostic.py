@@ -52,13 +52,15 @@ def remove_files(files):
 
 def refresh_table():
     global last_check
+    global config
     update_files(config)
     if config.last_update > last_check:
-        print("Files updated")
+        last_check = config.last_update
         synced_tree.delete(*synced_tree.get_children())
         create_table()
     refresh_unsynced_files()
     target_dir_var.set(Config().target_dir)
+    # set last check to current time
 
 def create_table():
     data = get_data()

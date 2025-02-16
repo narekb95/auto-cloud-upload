@@ -3,7 +3,7 @@ from shutil import copyfile
 from config import Config
 import time
 import os
-import math
+
 
 def file_exists_and_changed(last_check, file):
     if not os.path.isfile(file):
@@ -15,12 +15,12 @@ def file_exists_and_changed(last_check, file):
 
 # Returns true if some file changed after last update (in config) or after last check by caller (if provided)
 def update_files(config):
-    target_dir = config.target_dir
-    files = config.files
-
-    curr_timestamp = int(time.time())
     with config.lock:
         config.read_config()
+
+        target_dir = config.target_dir
+        files = config.files
+        curr_timestamp = int(time.time())
         files_updated = False
         for file in files:
             path = file['path']

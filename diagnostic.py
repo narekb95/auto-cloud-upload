@@ -58,8 +58,8 @@ def refresh_table():
         last_check = config.last_update
         synced_tree.delete(*synced_tree.get_children())
         create_table()
+        target_dir_var.set(config.target_dir)
     refresh_unsynced_files()
-    target_dir_var.set(Config().target_dir)
     # set last check to current time
 
 def create_table():

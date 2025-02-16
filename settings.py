@@ -28,7 +28,6 @@ def update_settings(settings, config):
 
 def create_settings_window(dialog, config):
     def submit():
-        print("Submitted")
         update_settings(settings, config)
         dialog.destroy()
 
@@ -38,6 +37,7 @@ def create_settings_window(dialog, config):
     settings_frame.pack(fill=tk.X, expand=True, anchor="n", padx=30, pady=10)
     settings_frame.columnconfigure(0, weight=0)
     settings_frame.columnconfigure(1, weight=1)
+    settings_frame.columnconfigure(2, weight=0)
     settings = get_current_settings(config)
     for i, setting in enumerate(settings):
         tk.Label(settings_frame, text=setting.label, font=('Ariel', 10))\
@@ -48,6 +48,10 @@ def create_settings_window(dialog, config):
         if i == 0:
             setting_entry.focus_set()
             setting_entry.select_range(0, tk.END)
+    
+    target_button = tk.Button(settings_frame, text="Browse", command=lambda setting=settings[0]:\
+                                setting.var.set(tk.filedialog.askdirectory()))
+    target_button.grid(row=0, column=2, padx=10, pady=10, sticky="w")
 
     submit_frame = tk.Frame(dialog)
     submit_frame.pack(expand=True)

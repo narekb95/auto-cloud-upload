@@ -12,11 +12,14 @@ _config_file = os.path.join(helpers.App_Data, _config_file_name)
 
 DEFAULT_CONFIG = {    
             "target": '',
-            "registry": [],
             "last-update": 0,
             "update-frequency": 10,
             "scheduler-frequency": 60,
+            "postpone-period": .2,
         }
+
+def get_config_file():
+    return _config_file
 
 def create_config_file(target_folder):
     class ResponseEnum(Enum):
@@ -57,15 +60,11 @@ class Config:
             config = json.load(f)
         
         self.target_dir = config['target']
-        self.files = config['registry']
         self.last_update = config['last-update']
-        self.update_frequency = config.get('update-frequency', 10)
-        self.scheduler_frequency = config.get('scheduler-frequency', 60)
+        self.update_frequency = config.get('update-frequency')
+        self.scheduler_frequency = config.get('scheduler-frequency')
+        self.postpone_period = config.get('postpone-period')
 
-    def reset_files(self):
-        for file in self.files:
-            file['last-update'] = 0
-        self.last_update = 0
 
     # Only call if something really changed
     def update_config(self):
@@ -74,8 +73,8 @@ class Config:
         with open(_config_file, 'w') as f:
             json.dump({
                 'target': self.target_dir,
-                'registry': self.files,
                 'last-update': self.last_update,
                 'update-frequency': self.update_frequency,
-                'scheduler-frequency': self.scheduler_frequency
+                'scheduler-frequency': self.scheduler_frequency,
+                'postpone-period': self.postpone_period
             }, f)

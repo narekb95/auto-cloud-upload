@@ -1,7 +1,6 @@
 import os
 import datetime
 from threading import Timer
-import config as cnf
 
 class RepeatTimer(Timer):
     def run(self):
@@ -12,14 +11,13 @@ _data_path = os.getenv('LOCALAPPDATA')
 
 App_Name = 'AutoUploader'
 App_Data = os.path.join(_data_path, App_Name)
-print(App_Data)
 
 def read_arg(target : str, argv):
     arg =  next((a for a in argv if a.startswith(f'--{target}=')), None)
     return arg.split('=')[1] if arg != None else None
 
 def timestamp_to_date(ts):
-    return datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d  %H:%M')
+    return datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d  %H:%M:%S')
 
 
 def file_exists_and_changed(self, last_check, file):

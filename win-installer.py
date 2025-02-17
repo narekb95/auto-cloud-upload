@@ -2,6 +2,7 @@ import winreg
 import subprocess
 import os
 import sys
+import getpass
 
 import tkinter as tk
 from tkinter import filedialog, messagebox
@@ -41,22 +42,35 @@ def create_registry_key(python_path, adder_path):
     winreg.SetValue(command_key, '', winreg.REG_SZ, reg_command)
     print(f'Created registry command: {reg_command} for key: {key_path}')
 
-def create_task(pythonw_path, updater):
+def create_task(xml_file, command, args):
     task_name = "File Auto Uploader"
-    task_command = f'{pythonw_path} "{updater}"'
+    user = getpass.getuser()
+
+    print(xml_file)
+    xml_data = None
+    with open(xml_file, "r") as file:
+        xml_data = file.read()
+    
+    xml_data = xml_data.replace("{{user}}", user)
+    xml_data = xml_data.replace("{{command}}", command)
+    xml_data = xml_data.replace("{{args}}", args)
+
+    with open('tmp.xml', "w") as file:
+        file.write(xml_data)
+    
     schtasks_command = [
         "schtasks",
         "/Create",
-        "/SC", "ONLOGON", 
-        "/TN", task_name,
-        "/TR", task_command,
-        "/F"  # Force create the task if it already exists
+        "/TN", "File Auto Upload", 
+        "/XML", "tmp.xml",
+        "/F"
     ]
-
     try:
         subprocess.run(schtasks_command, check=True)
     except subprocess.CalledProcessError as e:
         print(f"Failed to create task '{task_name}'. Error: {e}")
+    finally:
+        os.remove('tmp.xml')
 
     
 def run_installer(target_folder):
@@ -70,8 +84,10 @@ def run_installer(target_folder):
     updater_path = os.path.join(installer_dir, 'data_manager.py')
     adder_path = os.path.join(installer_dir, 'add_file.py')
 
+    xml_path = os.path.join(installer_dir, 'artifacts', 'File-Auto-Uploader.xml')
+
     create_registry_key(pythonw_path, adder_path)
-    create_task(exec_path, updater_path)
+    create_task(xml_path, pythonw_path, updater_path)
     create_config(target_folder)
     show_popup()
     exit()

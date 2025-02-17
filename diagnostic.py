@@ -3,6 +3,7 @@ from tkinter import ttk
 from os import path
 from os import remove as delete_file
 
+from data_manager import DataManager
 from config import Config
 import helpers
 from add_file import handle_add_file
@@ -17,6 +18,7 @@ last_check = 0
 DEFAULT_FONT = ("Arial", 10)
 
 config = Config()
+data_man : DataManager = DataManager(config)
 
 timer = None
 
@@ -36,7 +38,7 @@ def stop_timer():
         timer.cancel()
 
 def get_data():
-    files = sorted(config.files, key=lambda f: f['last-update'] if 'last-update' in f else 0, reverse=True)
+    files = sorted(data_man.files, key=lambda f: f['last-update'] if 'last-update' in f else 0, reverse=True)
     return list(map(lambda f: {
         'name': f['name'],
         'timestamp': timestamp_to_date(f['last-update']) if 'last-update' in f else 'N/A',
@@ -48,26 +50,19 @@ def open_file(file_name):
     helpers.open_file(file_path)
 
 def remove_files(files):
+    global data_man
     with config.lock:
         stop_timer()
-        config.read_config()
-        deleted_files = [file for file in config.files if file['name'] in files]
-        for file in deleted_files:
-            config.files.remove(file)
-        config.update_config()
+        data_man.remove_files(files)
         start_new_timer()
 
 def refresh_table():
     global last_check
     global config
-    update_files(config)
-    if config.last_update > last_check:
-        last_check = config.last_update
-        synced_tree.delete(*synced_tree.get_children())
-        create_table()
-        target_dir_var.set(config.target_dir)
-        start_new_timer()
-
+    synced_tree.delete(*synced_tree.get_children())
+    create_table()
+    target_dir_var.set(config.target_dir)
+    start_new_timer()
     refresh_unsynced_files()
     # set last check to current time
 
@@ -117,7 +112,7 @@ def delete_unsynced_files():
     if not response:
         return
     
-    dir, unsynced_files = get_unsynced_files(config)
+    dir, unsynced_files = get_unsynced_files(config, data_man)
     print(unsynced_files)
     for file in unsynced_files:
         delete_file(path.join(dir, file))
@@ -125,8 +120,9 @@ def delete_unsynced_files():
     refresh_unsynced_files()
 
 def refresh_unsynced_files():
+    global config, data_man
     listbox.delete(0, tk.END)
-    dir, unsynced_files = get_unsynced_files(config)
+    dir, unsynced_files = get_unsynced_files(config, data_man)
     for file in unsynced_files:
         listbox.insert(tk.END, file)
 
@@ -134,7 +130,7 @@ def refresh_unsynced_files():
 def on_add_file():
     stop_timer()
     try:
-        handle_add_file(root, config)
+        handle_add_file(root, config, data_man)
     except Exception as e:
         print(e)
     refresh_table()

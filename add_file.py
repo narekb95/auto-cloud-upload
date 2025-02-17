@@ -14,36 +14,33 @@ class SyncFile:
         self.path = tk.StringVar(value=path)
         self.name = tk.StringVar(value=name)
 
-def add_files(rows, config):
-    with config.lock:
-        config.read_config()
-        for row in reversed(rows):
-            if row.removed:
-                continue
-            file = row.file
-            path = file.path.get()
-            name = file.name.get() 
-            extension = path.split('.')[-1]
-            name = name.strip()
-            name = (f'{name}.{extension}').lower()
+def add_files(rows, data_man):
+    added_files = []
+    for row in reversed(rows):
+        if row.removed:
+            continue
+        file = row.file
+        path = file.path.get()
+        name = file.name.get() 
+        extension = path.split('.')[-1]
+        name = name.strip()
+        name = (f'{name}.{extension}').lower()
 
-            name_reg = re.compile(r'^[a-zA-Z0-9_\-\. ]+$')
-            if path == '':
-                row.err_var.set('No file selected.')
-                continue
-            if  not name_reg.match(name):
-                row.err_var.set('Invalid file name.')
-                continue
-
-            file = next((file for file in config.files if file['name'].lower() == name), None)
-            if file is not None:
-                row.err_var.set(f'File {name} already exists in auto-upload.')
-                continue
-
-            config.files.append({'path': path, 'name': name, 'last-update': 0})
-            row.removed = True
-
-        config.update_config()
+        name_reg = re.compile(r'^[a-zA-Z0-9_\-\. ]+$')
+        if path == '':
+            row.err_var.set('No file selected.')
+            continue
+        if  not name_reg.match(name):
+            row.err_var.set('Invalid file name.')
+            continue
+        file = next((file for file in data_man.files if file['name'].lower() == name), None)
+        if file is not None:
+            row.err_var.set(f'File {name} already exists in auto-upload.')
+            continue
+        
+        added_files.files.append({'path': path, 'name': name})
+        row.removed = True
+    data_man.add_files(added_files)
 
 # def update_path(path_var):
 #     newpath = filedialog.askopenfilename()
@@ -67,7 +64,7 @@ def remove_removed_rows(rows):
     return rows
             
 
-def open_add_file_dialog(dialog, files, config):    
+def open_add_file_dialog(dialog, files, config, data_man):    
     class Row:
         def __init__(self, file, index, root):
             self.file = file
@@ -98,8 +95,8 @@ def open_add_file_dialog(dialog, files, config):
     rows[0].name_entry.focus_set()
     rows[0].name_entry.selection_range(0, tk.END)
 
-    def on_submit(rows, config):
-        add_files(rows, config)
+    def on_submit(rows, config, data_man):
+        add_files(rows, config, data_man)
         if all(row.removed for row in rows):
             update_files(config)
             dialog.destroy()
@@ -128,7 +125,7 @@ def open_add_file_dialog(dialog, files, config):
 def get_name_without_extension(path):
     return os.path.splitext(os.path.basename(path))[0] if path != '' else ''
 
-def handle_add_file(root, config):
+def handle_add_file(root, config, data_man):
     path = filedialog.askopenfilenames()
     if(len(path) == 0):
         return
@@ -141,7 +138,7 @@ def handle_add_file(root, config):
     dialog.transient(root)
     dialog.grab_set()
     dialog.focus_set()
-    open_add_file_dialog(dialog, files, config)
+    open_add_file_dialog(dialog, files, config, data_man)
     root.wait_window(dialog)
 
 def main():

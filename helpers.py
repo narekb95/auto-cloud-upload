@@ -35,8 +35,8 @@ def open_file(path):
 def get_files_in_dir(directory):
     return [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))]
 
-def get_unsynced_files(config):
-    files = [file['name'] for file in config.files]
+def get_unsynced_files(config, data_man):
+    files = {file['name'] for file in data_man.files}
     dir = config.target_dir
     
     files_in_dir = [f for f in os.listdir(dir) if os.path.isfile(os.path.join(dir, f))]

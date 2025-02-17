@@ -15,20 +15,43 @@ def create_data_file():
     pass
 
 
-class FileManager:
-    def __init__(self, config):
-        self.config = config
+class DataManager:
+    def __init__(self, target_dir):
+        self.target_dir = target_dir
         self.read_data()
         self.lock = FileLock(f"{_data_file}.lock")
+
+    def add_files(self, files):
+        with self.lock:
+            self.read_data()
+            for file in files:
+                file['last-update'] = 0
+                self.files.append(file)
+            self.write_data()
+
+    def remove_files(self, files):
+        with self.lock:
+            self.read_data()
+            self.files = [f for f in self.files if f['name'] not in files]
+            self.write_data()
+
+    def on_target_dir_change(self, target_dir):
+        if self.target_dir == target_dir:
+            return
+        self.target_dir = target_dir
+        self.reset_files()
 
     def read_data(self):
         with open(_data_file, 'r') as f:
             self.files = json.load(f)['files']
     
     def reset_files(self):
-        for file in self.files:
-            file['last-update'] = 0
-        self.write_data()
+        with self.lock:
+            self.read_data()
+            for file in self.files:
+                file['last-update'] = 0
+            self.write_data()
+        self.update_files()
 
     def write_data(self):
         assert self.lock.is_locked
@@ -44,7 +67,7 @@ class FileManager:
         
         with self.lock:
             self.read_data()
-            target_dir = self.config.target_dir
+            target_dir = self.target_dir
             curr_timestamp = int(time.time())
 
             files_updated = False
@@ -63,14 +86,16 @@ class FileManager:
 
 
 class DataFileObserver:
-    def __init__(self, file_manager : FileManager):
-        self.file_manager = file_manager
+    def __init__(self, config):
+        self.config = config
+        self.file_manager = DataManager()
         self.postpone_period = Config().postpone_period
         self.last_update = 0
+        self.data_watcher = FileChangeHandler([_data_file], self.on_data_update)
+        self.config_watcher = FileChangeHandler([get_config_file()], self.on_config_update)
 
-        self.config_watcher = FileChangeHandler([get_config_file()], self.get_config_update)
-        self.file_watcher = FileChangeHandler([os.path.normpath(file['path'])\
-            for file in file_manager.files], self.on_file_update)
+        self.files = [os.path.normpath(file['path']) for file in self.file_manager.files]
+        self.file_watcher = FileChangeHandler(self.files, self.on_file_update)
 
     def run(self):
         self.config_watcher.start()
@@ -94,13 +119,28 @@ class DataFileObserver:
         time.sleep(self.postpone_period)
         self.file_manager.update_files()
 
-    def get_config_update(self, _):
+    def on_data_update(self, _):
+        self.file_manager.read_data()
+        new_files = [os.path.normpath(file['path']) for file in self.file_manager.files]
+        changed = False
+        for file in new_files:
+            if file not in self.files:
+                changed = True
+        for file in self.files:
+            if file not in new_files:
+                changed = True
+        if changed:
+            self.files = new_files
+            self.file_watcher.update_files(self.files)
+        
+    def on_config_update(self, _):
         self.postpone_period = Config().postpone_period
+        self.file_manager.on_target_dir_change(self.config.target_dir)
         
 
 def main():
-    file_manager = FileManager(Config())
-    observer = DataFileObserver(file_manager)
+    config = Config()
+    observer = DataFileObserver(config)
     observer.run()
 
 if __name__ == '__main__':

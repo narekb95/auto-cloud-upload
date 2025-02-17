@@ -1,17 +1,16 @@
 import time
-from threading import Thread
 from os import path, remove as delete_file
 
 import tkinter as tk
 from tkinter import ttk
 
 from data_manager import DataManager, get_data_file
-from config import Config
+from config import Config, get_config_file
 import helpers
 from add_file import handle_add_file
 from settings import handle_settings_request
-from helpers import timestamp_to_date, RepeatTimer, get_unsynced_files
-from file_observer import FileChangeHandler
+from helpers import timestamp_to_date, get_unsynced_files
+from file_observer import FileChangeHandler, FolderChangeHandler
 
 DEFAULT_CHECK_INTERVAL = 10
 
@@ -105,7 +104,7 @@ def delete_unsynced_files():
         return
 
     dir, unsynced_files = get_unsynced_files(config, data_man)
-    print(unsynced_files)
+    print('Unsynced files:', unsynced_files)
     for file in unsynced_files:
         delete_file(path.join(dir, file))
         print(f'Deleted file {file}')
@@ -169,7 +168,7 @@ def create_unsynced_files_frame(window):
 
 def on_settings_click():
     # stop_timer()
-    handle_settings_request(root, config)
+    handle_settings_request(root, config, data_man)
     refresh_table()
     # start_new_timer()
 
@@ -205,20 +204,46 @@ def main():
     menu_bar.add_cascade(label="File", menu=file_menu)
     root.config(menu=menu_bar)
 
-    global last_update
-    last_update = 0
+    global last_data_update
+    last_data_update = 0
+
     def on_data_update(_):
-        global last_update
+        global last_data_update
         global data_man
-        if time.time() - last_update < .2:
+        if time.time() - last_data_update < .2:
             return
-        last_update = time.time()
+        last_data_update = time.time()
         time.sleep(.2)
         data_man.read_data()
         refresh_table()
 
+    global last_target_update
+    last_target_update = 0
+    def on_target_folder_update(_):
+        global last_target_update
+        if time.time() - last_target_update < .2:
+            return
+        last_target_update = time.time()
+        refresh_unsynced_files()
+
+
     file_observer = FileChangeHandler([get_data_file()], on_data_update)
     file_observer.start()
+
+    target_folder_observer = FolderChangeHandler(config.target_dir, on_target_folder_update)
+    target_folder_observer.start()
+
+    def config_update(_):
+        old_target = config.target_dir
+        config.read_config()
+        if old_target != config.target_dir:
+            refresh_table()
+            refresh_unsynced_files()
+            target_dir_var.set(config.target_dir)
+            target_folder_observer.update_watched_dirs(config.target_dir)
+
+    config_observer = FileChangeHandler([get_config_file()], config_update)
+    config_observer.start()
 
     root.mainloop()
 

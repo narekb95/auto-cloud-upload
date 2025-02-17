@@ -18,19 +18,17 @@ def get_current_settings(config):
                  for label, attribute, is_numeric in settings_items]
     return settings
 
-def update_settings(settings, config):
+def update_settings(settings, config, data_man):
     with config.lock:
         config.read_config()
-        old_dir = config.target_dir
         for setting in settings:
             setattr(config, setting.attribute, int(setting.var.get()) if setting.is_numeric else setting.var.get())
-        if old_dir != config.target_dir:
-            config.reset_files()
+        data_man.update_target_dir(settings[0].var.get())
         config.update_config()
 
-def create_settings_window(dialog, config):
+def create_settings_window(dialog, config, data_man):
     def submit():
-        update_settings(settings, config)
+        update_settings(settings, config, data_man)
         dialog.destroy()
 
     dialog.title("Add file")
@@ -70,12 +68,12 @@ def create_settings_window(dialog, config):
     tk.Frame(dialog).pack(pady=8)
         
     
-def handle_settings_request(root, config):
+def handle_settings_request(root, config, data_man):
     dialog = tk.Toplevel()
     dialog.transient(root)
     dialog.grab_set()
     dialog.focus_set()
-    create_settings_window(dialog, config)
+    create_settings_window(dialog, config, data_man)
     root.wait_window(dialog)
 
 def main():

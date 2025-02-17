@@ -5,6 +5,31 @@ from threading import Thread
 
 from os import path
 
+class FolderChangeHandler(FileSystemEventHandler):
+    def __init__(self, folder, callback):
+        super().__init__()
+        self.folder = folder
+        self.callback = callback
+        self.observer = Observer()
+
+
+    def update_watched_dirs(self, folder):        
+        self.observer.unschedule_all()
+        self.directory = folder
+        self.observer.schedule(self, path=self.directory, recursive=False)
+
+    def on_modified(self, event):
+        Thread(target=self.callback, args=(event.src_path,)).start()
+
+    def start(self):
+        self.observer.start()
+    
+    def stop(self):
+        self.observer.stop()
+
+    def join(self):
+        self.observer.join()
+
 class FileChangeHandler(FileSystemEventHandler):
     def __init__(self, files, callback):
         super().__init__()

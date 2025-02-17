@@ -44,6 +44,12 @@ class DataManager:
         self.target_dir = target_dir
         self.reset_files()
 
+    def update_target_dir(self, target_dir):
+        if self.target_dir == target_dir:
+            return
+        self.target_dir = target_dir
+        self.reset_files()
+
     def read_data(self):
         with open(_data_file, 'r') as f:
             self.files = json.load(f)['files']
@@ -83,7 +89,6 @@ class DataManager:
                     files_updated = True
                     copyfile(path, target_file)
                     file['last-update'] = curr_timestamp
-            print('Files updated:', files_updated)
             if files_updated:
                 self.write_data()
 

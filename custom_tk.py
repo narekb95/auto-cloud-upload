@@ -1,7 +1,12 @@
 import tkinter as tk
-from tkinter import simpledialog
+from enum import Enum
 
-
+class ResponseEnum(Enum):
+    overwrite = 'overwrite'
+    update_path = 'update path'
+    skip = 'skip'
+    none = None
+    
 def custom_messagebox(title, message, options):
     # Create a custom dialog window
     dialog = tk.Toplevel()

@@ -13,7 +13,9 @@ def get_current_settings(config):
     settings_items = [
         ("Target folder", "target_dir", False),
         ("Update frequency", "update_frequency", True),
-        ("Scheduler frequency", "scheduler_frequency", True)]
+        ("Scheduler frequency", "scheduler_frequency", True),
+        ("Postpone period", "postpone_period", True)
+        ]
     settings = [Setting(label, attribute, getattr(config, attribute), is_numeric)\
                  for label, attribute, is_numeric in settings_items]
     return settings

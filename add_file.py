@@ -112,7 +112,7 @@ def open_add_file_dialog(dialog, files, config, data_man):
         submit_button.grid(row=len(rows)+1,column=0, columnspan=3, padx=20, pady=10, sticky="e")
     pack_buttons()
 
-    dialog.bind('<Return>', lambda _, rows=rows, config=config : on_submit(rows, config, data_man))
+    dialog.bind('<Return>', lambda _, rows=rows, config=config : on_submit(rows, data_man))
     dialog.bind('<Escape>', lambda _: dialog.destroy())
 
 def get_name_without_extension(path):

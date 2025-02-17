@@ -6,7 +6,29 @@ import sys
 import tkinter as tk
 from tkinter import filedialog, messagebox
 
-from config import create_config_file
+from data_manager import create_data_file, DataManager
+from custom_tk import custom_messagebox, ResponseEnum
+
+import config
+
+def create_config(target_folder, handle_existing_config = False):
+    if not handle_existing_config:
+        try:
+            config.create_config_file(target_folder, ResponseEnum.none)
+            create_data_file()
+        except FileExistsError:
+            create_config(target_folder, handle_existing_config=True)
+            return
+    
+    ops = ["overwrite", "update path", "skip"]
+    response = custom_messagebox("Error", "Config file already exists", ops)
+    response = ResponseEnum(response)
+    config.create_config_file(target_folder, response)
+    if response == ResponseEnum.overwrite:
+        create_data_file()
+    elif response == ResponseEnum.update_path:
+        DataManager().reset_files()
+        
 
 def create_registry_key(python_path, adder_path):
     key_path = r'Software\Classes\*\shell\AutoUpload'
@@ -25,7 +47,7 @@ def create_task(pythonw_path, updater):
     schtasks_command = [
         "schtasks",
         "/Create",
-        "/SC", "MINUTE", 
+        "/SC", "ONLOGON", 
         "/TN", task_name,
         "/TR", task_command,
         "/F"  # Force create the task if it already exists
@@ -45,12 +67,12 @@ def run_installer(target_folder):
     python_folder = os.path.dirname(exec_path)
     pythonw_path = os.path.join(python_folder, 'pythonw3.exe')
 
-    updater_path = os.path.join(installer_dir, 'update_files.py')
+    updater_path = os.path.join(installer_dir, 'data_manager.py')
     adder_path = os.path.join(installer_dir, 'add_file.py')
 
     create_registry_key(pythonw_path, adder_path)
-    create_task(pythonw_path, updater_path)
-    create_config_file(target_folder)
+    create_task(exec_path, updater_path)
+    create_config(target_folder)
     show_popup()
     exit()
 

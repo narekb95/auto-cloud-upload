@@ -2,47 +2,46 @@ import os
 import json
 import time
 
-from enum import Enum
 import helpers
-from custom_tk import custom_messagebox
+from custom_tk import ResponseEnum
 from filelock import FileLock
 
 _config_file_name = 'config.json'
 _config_file = os.path.join(helpers.App_Data, _config_file_name)
 
 DEFAULT_CONFIG = {    
-            "target": '',
             "last-update": 0,
             "update-frequency": 10,
             "scheduler-frequency": 60,
             "postpone-period": .2,
         }
 
+def get_default_config(target_folder):
+    config_data = DEFAULT_CONFIG
+    config_data['target'] = target_folder
+    return config_data
+
 def get_config_file():
     return _config_file
 
-def create_config_file(target_folder):
-    class ResponseEnum(Enum):
-        overwrite = 'overwrite'
-        update_path = 'update path'
-        skip = 'skip'
-    
-    response = ResponseEnum.overwrite
-    if os.path.exists(_config_file):
-        response = custom_messagebox("Error", "Config file already exists", ["overwrite", "update path", "skip"])
-        response = ResponseEnum(response)
-    
-    config_data = {}
-    if response == ResponseEnum.skip:
+def create_config_file(target_folder, response):
+    if not os.path.exists(_config_file):
+        config_data = get_default_config(target_folder)
+        with open(_config_file, 'w') as f:
+            json.dump(config_data, f)
         return
+
+    config_data = None
+    if response == ResponseEnum.none:
+        raise FileExistsError(f"Config file already exists at {_config_file}")
+    elif response == ResponseEnum.overwrite:
+        config_data = get_default_config(target_folder)
     elif response == ResponseEnum.update_path:
         config_data = json.load(open(_config_file, 'r'))
         config_data['target'] = target_folder
-        for file in config_data['registry']:
-            del file['last-update']
-    else:
-        config_data = DEFAULT_CONFIG
-        config_data['target'] = target_folder
+    elif response == ResponseEnum.skip:
+        return
+
     print(f"Creating config file at {_config_file}")
     os.makedirs(helpers.App_Data, exist_ok=True)
     with open(_config_file, 'w') as f:

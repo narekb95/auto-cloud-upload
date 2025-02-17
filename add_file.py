@@ -6,7 +6,7 @@ import tkinter as tk
 from tkinter import filedialog
 
 from config import Config
-
+from data_manager import DataManager
 class SyncFile:
     def __init__(self, path, name):
         self.path = tk.StringVar(value=path)
@@ -89,11 +89,11 @@ def open_add_file_dialog(dialog, files, config, data_man):
     rows[0].name_entry.focus_set()
     rows[0].name_entry.selection_range(0, tk.END)
 
-    def on_submit(rows, config, data_man):
+    def on_submit(rows, data_man):
         add_files(rows, data_man)
-        if all(row.removed for row in rows):
-            dialog.destroy()
         rows = remove_removed_rows(rows)
+        if len(rows) == 0:
+            dialog.destroy()
     
     def add_more_files():
         paths = filedialog.askopenfilenames()
@@ -104,7 +104,7 @@ def open_add_file_dialog(dialog, files, config, data_man):
         pack_buttons()
                 
     add_files_button = tk.Button(dialog, text="Add files", font=("Ariel", 9), command=add_more_files)
-    submit_button = tk.Button(dialog, text="Submit", font=("Arial", 10), command=lambda rows = rows, config=config: on_submit(rows, config, data_man))
+    submit_button = tk.Button(dialog, text="Submit", font=("Arial", 10), command=lambda rows = rows: on_submit(rows, data_man))
 
     
     def pack_buttons():
@@ -144,7 +144,8 @@ def main():
 
     file = SyncFile(path, file_name)
     config = Config()
-    open_add_file_dialog(root, [file], config)
+    data_man = DataManager(config.target_dir)
+    open_add_file_dialog(root, [file], config, data_man)
     root.mainloop()
 
 if __name__ == '__main__':

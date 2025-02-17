@@ -19,7 +19,7 @@ last_check = 0
 DEFAULT_FONT = ("Arial", 10)
 
 config = Config()
-data_man : DataManager = DataManager(config)
+data_man : DataManager = DataManager(config.target_dir)
 
 # timer = None
 

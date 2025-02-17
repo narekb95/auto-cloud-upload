@@ -31,12 +31,14 @@ class DataManager:
                 file['last-update'] = 0
                 self.files.append(file)
             self.write_data()
+        self.update_files()
 
     def remove_files(self, files):
         with self.lock:
             self.read_data()
             self.files = [f for f in self.files if f['name'] not in files]
             self.write_data()
+        self.update_files()
 
     def update_target_dir(self, target_dir):
         if self.target_dir == target_dir:
@@ -103,6 +105,7 @@ class DataFileObserver:
     def run(self):
         self.config_watcher.start()
         self.file_watcher.start()
+        self.data_watcher.start()
 
         try:
             while True:
@@ -118,6 +121,7 @@ class DataFileObserver:
         if current_time - self.last_update < self.postpone_period:
             return
         self.last_update = current_time
+        print('Files updated')
         time.sleep(self.postpone_period)
         self.file_manager.update_files()
 
@@ -133,6 +137,7 @@ class DataFileObserver:
             if file not in new_files:
                 changed = True
         if changed:
+            print('list of files changed')
             self.files = new_files
             self.file_watcher.update_files(self.files)
         

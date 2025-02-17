@@ -45,7 +45,6 @@ class FileChangeHandler(FileSystemEventHandler):
         self.observer.unschedule_all()
         WATCHED_DIRS = {path.dirname(f) for f in self.files}
         for directory in WATCHED_DIRS:
-            print(directory)
             self.observer.schedule(self, path=directory, recursive=False)
 
     def on_modified(self, event):

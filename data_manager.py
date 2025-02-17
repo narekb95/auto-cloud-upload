@@ -38,12 +38,6 @@ class DataManager:
             self.files = [f for f in self.files if f['name'] not in files]
             self.write_data()
 
-    def on_target_dir_change(self, target_dir):
-        if self.target_dir == target_dir:
-            return
-        self.target_dir = target_dir
-        self.reset_files()
-
     def update_target_dir(self, target_dir):
         if self.target_dir == target_dir:
             return
@@ -144,7 +138,7 @@ class DataFileObserver:
         
     def on_config_update(self, _):
         self.postpone_period = Config().postpone_period
-        self.file_manager.on_target_dir_change(self.config.target_dir)
+        self.file_manager.update_target_dir(self.config.target_dir)
         
 
 def main():

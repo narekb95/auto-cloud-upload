@@ -42,10 +42,6 @@ def add_files(rows, data_man):
         row.removed = True
     data_man.add_files(added_files)
 
-# def update_path(path_var):
-#     newpath = filedialog.askopenfilename()
-#     path_var.set(newpath)
-
 def shorten_path(path):
     return path if len(path) < 40 else f'{path[:10]}...{path[-30:]}'
  

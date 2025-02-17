@@ -68,21 +68,17 @@ def refresh_table():
 
 def create_table():
     data = get_data()
-
-    # Define Treeview
     tree = synced_tree
-    # Insert Data
     for row in data:
         tree.insert("", "end", values=(row["name"], row["timestamp"]))
-
     tree.pack(fill=tk.BOTH, expand=True)
 
-    def open_by_clique(event):
+    def on_open_file(event):
         item = tree.identify_row(event.y)
         if item:
             open_file(tree.item(item, "values")[0])
 
-    tree.bind("<Double-Button-1>", open_by_clique)
+    tree.bind("<Double-Button-1>", on_open_file)
     # if empty area is clicked, deselect all
     def empty_click_handler(event):
         item = tree.identify_row(event.y)
@@ -103,15 +99,11 @@ def remove_selected():
         synced_tree.delete(item)
     refresh_unsynced_files()
     
-
-# delete uncynced files
 def delete_unsynced_files():
-    # show a popup asking if sure
-    # delete all files that are not in the config
     response = tk.messagebox.askyesno("Delete Unsynced Files", "Are you sure you want to delete all unsynced files?")
     if not response:
         return
-    
+
     dir, unsynced_files = get_unsynced_files(config, data_man)
     print(unsynced_files)
     for file in unsynced_files:

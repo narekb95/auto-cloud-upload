@@ -12,8 +12,11 @@ _data_file_name = 'data.json'
 _data_file = os.path.join(helpers.App_Data, _data_file_name)
 
 def create_data_file():
-    pass
+    with open(_data_file, 'w') as f:
+        json.dump({'files': []}, f)
 
+def get_data_file():
+    return _data_file
 
 class DataManager:
     def __init__(self, target_dir):
@@ -88,7 +91,7 @@ class DataManager:
 class DataFileObserver:
     def __init__(self, config):
         self.config = config
-        self.file_manager = DataManager()
+        self.file_manager = DataManager(config.target_dir)
         self.postpone_period = Config().postpone_period
         self.last_update = 0
         self.data_watcher = FileChangeHandler([_data_file], self.on_data_update)

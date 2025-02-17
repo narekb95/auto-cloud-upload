@@ -1,13 +1,12 @@
 from sys import argv
 import os
+import re
 
-from config import Config
 import tkinter as tk
 from tkinter import filedialog
 
 from update_files import update_files
-
-import re
+from config import Config
 
 class SyncFile:
     def __init__(self, path, name):

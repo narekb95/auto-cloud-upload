@@ -83,6 +83,7 @@ class DataManager:
                     files_updated = True
                     copyfile(path, target_file)
                     file['last-update'] = curr_timestamp
+            print('Files updated:', files_updated)
             if files_updated:
                 self.write_data()
 
@@ -115,7 +116,6 @@ class DataFileObserver:
 
     def on_file_update(self, _):
         current_time = time.time()
-
         if current_time - self.last_update < self.postpone_period:
             return
         self.last_update = current_time
@@ -123,6 +123,7 @@ class DataFileObserver:
         self.file_manager.update_files()
 
     def on_data_update(self, _):
+        print('Data file updated')
         self.file_manager.read_data()
         new_files = [os.path.normpath(file['path']) for file in self.file_manager.files]
         changed = False

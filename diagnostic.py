@@ -1,7 +1,8 @@
+import time
+from os import path, remove as delete_file
+
 import tkinter as tk
 from tkinter import ttk
-from os import path
-from os import remove as delete_file
 
 from data_manager import DataManager, get_data_file
 from config import Config
@@ -57,15 +58,12 @@ def remove_files(files):
         # start_new_timer()
 
 def refresh_table():
-    print('refresh call')
     global last_check
     global config
     synced_tree.delete(*synced_tree.get_children())
     create_table()
     target_dir_var.set(config.target_dir)
-    # start_new_timer()
     refresh_unsynced_files()
-    # set last check to current time
 
 def create_table():
     data = get_data()
@@ -206,8 +204,19 @@ def main():
     menu_bar.add_cascade(label="File", menu=file_menu)
     root.config(menu=menu_bar)
 
+    global last_update
+    last_update = 0
+    def on_data_update(_):
+        global last_update
+        global data_man
+        if time.time() - last_update < .2:
+            return
+        last_update = time.time()
+        time.sleep(.2)
+        data_man.read_data()
+        refresh_table()
 
-    file_observer = FileChangeHandler([get_data_file()], refresh_table)
+    file_observer = FileChangeHandler([get_data_file()], on_data_update)
     file_observer.start()
 
     root.mainloop()

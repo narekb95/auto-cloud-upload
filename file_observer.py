@@ -8,15 +8,15 @@ from os import path
 class FolderChangeHandler(FileSystemEventHandler):
     def __init__(self, folder, callback):
         super().__init__()
-        self.folder = folder
         self.callback = callback
         self.observer = Observer()
+        self.update_watched_dirs(folder)
 
 
     def update_watched_dirs(self, folder):        
         self.observer.unschedule_all()
-        self.directory = folder
-        self.observer.schedule(self, path=self.directory, recursive=False)
+        self.folder = folder
+        self.observer.schedule(self, path=self.folder, recursive=False)
 
     def on_modified(self, event):
         Thread(target=self.callback, args=(event.src_path,)).start()

@@ -217,13 +217,14 @@ def main():
         data_man.read_data()
         refresh_table()
 
-    global last_target_update
-    last_target_update = 0
+    global last_target_folder_update
+    last_target_folder_update = 0
     def on_target_folder_update(_):
-        global last_target_update
-        if time.time() - last_target_update < .2:
+        global last_target_folder_update
+        if time.time() - last_target_folder_update < .2:
             return
-        last_target_update = time.time()
+        last_target_folder_update = time.time()
+        time.sleep(.2)
         refresh_unsynced_files()
 
 

@@ -5,7 +5,6 @@ import re
 import tkinter as tk
 from tkinter import filedialog
 
-from update_files import update_files
 from config import Config
 
 class SyncFile:
@@ -37,7 +36,7 @@ def add_files(rows, data_man):
             row.err_var.set(f'File {name} already exists in auto-upload.')
             continue
         
-        added_files.files.append({'path': path, 'name': name})
+        added_files.append({'path': path, 'name': name})
         row.removed = True
     data_man.add_files(added_files)
 
@@ -91,9 +90,8 @@ def open_add_file_dialog(dialog, files, config, data_man):
     rows[0].name_entry.selection_range(0, tk.END)
 
     def on_submit(rows, config, data_man):
-        add_files(rows, config, data_man)
+        add_files(rows, data_man)
         if all(row.removed for row in rows):
-            update_files(config)
             dialog.destroy()
         rows = remove_removed_rows(rows)
     
@@ -106,7 +104,7 @@ def open_add_file_dialog(dialog, files, config, data_man):
         pack_buttons()
                 
     add_files_button = tk.Button(dialog, text="Add files", font=("Ariel", 9), command=add_more_files)
-    submit_button = tk.Button(dialog, text="Submit", font=("Arial", 10), command=lambda rows = rows, config=config: on_submit(rows, config))
+    submit_button = tk.Button(dialog, text="Submit", font=("Arial", 10), command=lambda rows = rows, config=config: on_submit(rows, config, data_man))
 
     
     def pack_buttons():
@@ -114,7 +112,7 @@ def open_add_file_dialog(dialog, files, config, data_man):
         submit_button.grid(row=len(rows)+1,column=0, columnspan=3, padx=20, pady=10, sticky="e")
     pack_buttons()
 
-    dialog.bind('<Return>', lambda _, rows=rows, config=config : on_submit(rows, config))
+    dialog.bind('<Return>', lambda _, rows=rows, config=config : on_submit(rows, config, data_man))
     dialog.bind('<Escape>', lambda _: dialog.destroy())
 
 def get_name_without_extension(path):

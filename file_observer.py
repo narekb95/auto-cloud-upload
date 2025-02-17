@@ -4,7 +4,6 @@ from os import path
 from threading import Thread
 
 from os import path
-from update_files import update_files
 
 class FileChangeHandler(FileSystemEventHandler):
     def __init__(self, files, callback):

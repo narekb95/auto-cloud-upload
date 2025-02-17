@@ -1,4 +1,5 @@
 import time
+from threading import Thread
 from os import path, remove as delete_file
 
 import tkinter as tk

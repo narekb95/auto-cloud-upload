@@ -11,8 +11,6 @@ _config_file = os.path.join(helpers.App_Data, _config_file_name)
 
 DEFAULT_CONFIG = {    
             "last-update": 0,
-            "update-frequency": 10,
-            "scheduler-frequency": 60,
             "postpone-period": .2,
         }
 
@@ -60,8 +58,6 @@ class Config:
         
         self.target_dir = config['target']
         self.last_update = config['last-update']
-        self.update_frequency = config.get('update-frequency')
-        self.scheduler_frequency = config.get('scheduler-frequency')
         self.postpone_period = config.get('postpone-period')
 
 
@@ -73,7 +69,5 @@ class Config:
             json.dump({
                 'target': self.target_dir,
                 'last-update': self.last_update,
-                'update-frequency': self.update_frequency,
-                'scheduler-frequency': self.scheduler_frequency,
                 'postpone-period': self.postpone_period
             }, f)

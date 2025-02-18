@@ -21,23 +21,6 @@ DEFAULT_FONT = ("Arial", 10)
 config = Config()
 data_man : DataManager = DataManager(config.target_dir)
 
-# timer = None
-
-# def start_new_timer():
-#     global config
-#     global timer
-    
-#     if timer:
-#         stop_timer()
-#     timer = RepeatTimer(config.update_frequency, refresh_table)
-#     timer.daemon = True
-#     timer.start()
-
-# def stop_timer():
-#     global timer
-#     if timer:
-#         timer.cancel()
-
 def get_data():
     files = sorted(data_man.files, key=lambda f: f['last-update'] if 'last-update' in f else 0, reverse=True)
     return list(map(lambda f: {
@@ -53,9 +36,7 @@ def open_file(file_name):
 def remove_files(files):
     global data_man
     with config.lock:
-        # stop_timer()
         data_man.remove_files(files)
-        # start_new_timer()
 
 def refresh_table():
     global last_check
@@ -119,13 +100,11 @@ def refresh_unsynced_files():
 
 
 def on_add_file():
-    # stop_timer()
     try:
         handle_add_file(root, config, data_man)
     except Exception as e:
         print(e)
     refresh_table()
-    # start_new_timer()
 
 def build_toolbar(toolbar):
     label = tk.Label(toolbar, text="Synced Files", font=('Arial', 8))
@@ -167,10 +146,8 @@ def create_unsynced_files_frame(window):
     window.add(unsynced_files_frame, minsize=175)
 
 def on_settings_click():
-    # stop_timer()
     handle_settings_request(root, config)
     refresh_table()
-    # start_new_timer()
 
 def main():
     global root

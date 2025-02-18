@@ -2,36 +2,54 @@ import tkinter as tk
 import config as cnf
 import tkinter.filedialog
 
+from enum import Enum
+class SettingType(Enum):
+    TEXT = 1
+    NUMERIC = 2
+    FOLDER = 3
+
 class Setting:
-    def __init__(self, label, attribute, value, is_numeric):
+    def __init__(self, label, attribute, value, type : SettingType):
         self.label = label
         self.attribute = attribute
         self.var = tk.StringVar(value=value)
-        self.is_numeric = is_numeric
+        self.type = type
 
 def get_current_settings(config):
     settings_items = [
-        ("Target folder", "target_dir", False),
-        ("Update frequency", "update_frequency", True),
-        ("Scheduler frequency", "scheduler_frequency", True),
-        ("Postpone period", "postpone_period", True)
+        ("Target folder", "target_dir", SettingType.FOLDER),
+        ("Postpone period", "postpone_period", SettingType.NUMERIC),
         ]
-    settings = [Setting(label, attribute, getattr(config, attribute), is_numeric)\
-                 for label, attribute, is_numeric in settings_items]
+    settings = [Setting(label, attribute, getattr(config, attribute), type)\
+                 for label, attribute, type in settings_items]
     return settings
 
-def update_settings(settings, config, data_man):
+def update_settings(settings, config):
     with config.lock:
         config.read_config()
         for setting in settings:
-            setattr(config, setting.attribute, int(setting.var.get()) if setting.is_numeric else setting.var.get())
-        data_man.update_target_dir(settings[0].var.get())
+            setting_value = setting.var.get()
+            if setting.type == SettingType.NUMERIC:
+                try:
+                    setting_value = float(setting_value)
+                except ValueError:
+                    raise ValueError(f"Invalid value for {setting.label}")
+            setattr(config, setting.attribute, setting_value)
         config.update_config()
 
-def create_settings_window(dialog, config, data_man):
+
+def create_settings_window(dialog, config):
+    global folder_icon
+    folder_icon = tk.PhotoImage(file="media/buttons/folder.png")
+
+
     def submit():
-        update_settings(settings, config, data_man)
-        dialog.destroy()
+        try:
+            update_settings(settings, config)
+            dialog.destroy()
+        except ValueError as e:
+            tk.messagebox.showerror("Error", str(e))
+            return
 
     dialog.title("Add file")
 
@@ -41,6 +59,13 @@ def create_settings_window(dialog, config, data_man):
     settings_frame.columnconfigure(1, weight=0)
     settings_frame.columnconfigure(2, weight=1)
     settings = get_current_settings(config)
+
+    
+    def update_directory(i):
+        folder =tk.filedialog.askdirectory()
+        if folder:
+            settings[i].var.set(folder)
+
     for i, setting in enumerate(settings):
         tk.Label(settings_frame, text=setting.label, font=('Ariel', 10))\
             .grid(row=i, column=0, padx=10, pady=10, sticky="w")
@@ -51,16 +76,10 @@ def create_settings_window(dialog, config, data_man):
             setting_entry.focus_set()
             setting_entry.select_range(0, tk.END)
     
-    def update_directory():
-        folder =tk.filedialog.askdirectory()
-        if folder:
-            settings[0].var.set(folder)
-
-    folder_icon = tk.PhotoImage(file="media/buttons/folder.png")
-    target_folder_button = tk.Button(settings_frame, image=folder_icon, \
-        command = update_directory)
-    target_folder_button.image = folder_icon  # Keep a reference to avoid garbage collection
-    target_folder_button.grid(row=0, column=1, padx=0, pady=10, sticky="w")
+        if setting.type == SettingType.FOLDER:
+            target_folder_button = tk.Button(settings_frame, image=folder_icon, \
+                command = lambda i=i: update_directory(i))
+            target_folder_button.grid(row=i, column=1, padx=0, pady=10, sticky="w")
 
     submit_frame = tk.Frame(dialog)
     submit_frame.pack(expand=True)
@@ -70,12 +89,12 @@ def create_settings_window(dialog, config, data_man):
     tk.Frame(dialog).pack(pady=8)
         
     
-def handle_settings_request(root, config, data_man):
+def handle_settings_request(root, config):
     dialog = tk.Toplevel()
     dialog.transient(root)
     dialog.grab_set()
     dialog.focus_set()
-    create_settings_window(dialog, config, data_man)
+    create_settings_window(dialog, config)
     root.wait_window(dialog)
 
 def main():

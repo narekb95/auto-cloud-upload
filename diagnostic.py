@@ -168,7 +168,7 @@ def create_unsynced_files_frame(window):
 
 def on_settings_click():
     # stop_timer()
-    handle_settings_request(root, config, data_man)
+    handle_settings_request(root, config)
     refresh_table()
     # start_new_timer()
 

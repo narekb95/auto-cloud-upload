@@ -10,7 +10,7 @@ import helpers
 from add_file import handle_add_file
 from settings import handle_settings_request
 from helpers import timestamp_to_date, get_unsynced_files
-from file_observer import FileChangeHandler, FolderChangeHandler
+from file_observer import FileChangeHandler, FolderDeletionHandler
 
 DEFAULT_CHECK_INTERVAL = 10
 
@@ -208,7 +208,7 @@ def main():
     file_observer = FileChangeHandler([get_data_file()], on_data_update)
     file_observer.start()
 
-    target_folder_observer = FolderChangeHandler(config.target_dir, on_target_folder_update)
+    target_folder_observer = FolderDeletionHandler(config.target_dir, on_target_folder_update)
     target_folder_observer.start()
 
     def config_update(_):

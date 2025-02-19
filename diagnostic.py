@@ -238,7 +238,7 @@ def main():
     global root
     root = tk.Tk()
     root.geometry("600x400")
-    root.title("Cloud Auto-uploader")
+    root.title("Auto Cloud Upload")
     root.bind("<Escape>", handle_escape)
     root.bind("<Delete>", lambda e: remove_selected())
     root.bind("<Return>", lambda e: open_selected())

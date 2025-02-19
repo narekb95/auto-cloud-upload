@@ -1,4 +1,4 @@
-# Auto File Uploader
+# Auto Cloud Upload
 
 Auto File Uploader is a lightweight event-based tool that automatically monitors and syncs selected files to a target folder. This is useful for keeping files up-to-date in cloud storage or other backup locations.
 

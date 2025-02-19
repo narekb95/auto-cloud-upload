@@ -60,12 +60,17 @@ def refresh_table():
     target_dir_var.set(config.target_dir)
     refresh_unsynced_files()
 
-def clear_other_selection(event, other_tree):
+def handle_tree_selection_event(event, other_tree):
     selected = event.widget.selection()
     if not selected:
         return
     other_tree.selection_remove(other_tree.selection())
 
+    no_items_selected = (len(synced_tree.selection()) == 0 and len(unsynced_tree.selection()) == 0)
+    no_synced_selected = len(synced_tree.selection()) == 0
+    edit_menu.entryconfig("Open", state=tk.NORMAL if not no_items_selected else tk.DISABLED)
+    edit_menu.entryconfig("Remove", state=tk.NORMAL if not no_synced_selected else tk.DISABLED)
+    edit_menu.entryconfig("Delete", state=tk.NORMAL if not no_items_selected else tk.DISABLED)
 
 def on_open_file(tree, event):
     item = tree.identify_row(event.y)
@@ -144,7 +149,7 @@ def create_synced_files_frame(window):
     synced_tree.bind("<Double-Button-1>", lambda e: on_open_file(synced_tree, e))
     synced_tree.bind("<Button-1>", lambda e: empty_click_handler(e, synced_tree))
     synced_tree.bind("<Button-3>", handle_synced_right_click)
-    synced_tree.bind("<<TreeviewSelect>>", lambda e: clear_other_selection(e, unsynced_tree))
+    synced_tree.bind("<<TreeviewSelect>>", lambda e: handle_tree_selection_event(e, unsynced_tree))
 
     refresh_table()
 
@@ -185,7 +190,7 @@ def create_unsynced_files_frame(window):
     unsynced_tree.heading("Name", text="Name")
     unsynced_tree.column("Name", anchor="w")
     unsynced_tree.bind("<Button-3>", handle_unsynced_right_click)
-    unsynced_tree.bind("<<TreeviewSelect>>", lambda e: clear_other_selection(e, synced_tree))
+    unsynced_tree.bind("<<TreeviewSelect>>", lambda e: handle_tree_selection_event(e, synced_tree))
     unsynced_tree.bind("<Double-Button-1>", lambda e: on_open_file(unsynced_tree, e))
     unsynced_tree.bind("<Button-1>", lambda e: empty_click_handler(e, unsynced_tree))
 
@@ -203,8 +208,43 @@ def handle_escape(_):
     else:
         root.destroy()
 
-def main():
 
+def open_selected_items():
+    if len(synced_tree.selection()) > 0:
+        open_selected(synced_tree)
+    elif len(unsynced_tree.selection()) > 0:
+        open_selected(unsynced_tree)
+    else:
+        raise Exception("No items selected, button should be disabled")
+
+def delete_selected_items():
+    if len(synced_tree.selection()) > 0:
+        remove_and_delete_selected(synced_tree)
+    elif len(unsynced_tree.selection()) > 0:
+        delete_selected(unsynced_tree)
+    else:
+        raise Exception("No items selected, button should be disabled")
+
+def create_menu_bar(root):
+    menu_bar = tk.Menu(root)
+
+    file_menu = tk.Menu(menu_bar, tearoff=0)
+    file_menu.add_command(label="Add File", command=on_add_file)
+    file_menu.add_command(label="Delete Unsynced", command=delete_unsynced_files)
+    file_menu.add_separator()
+    file_menu.add_command(label="Settings", command=on_settings_click)
+    menu_bar.add_cascade(label="File", menu=file_menu)
+
+    global edit_menu
+    edit_menu = tk.Menu(menu_bar, tearoff=0)
+    edit_menu.add_command(label="Open", command=open_selected_items, state=tk.DISABLED)
+    edit_menu.add_command(label="Remove", command=remove_selected, state=tk.DISABLED)
+    edit_menu.add_command(label="Delete", command=delete_selected_items, state=tk.DISABLED)
+    menu_bar.add_cascade(label="Edit", menu=edit_menu)
+
+    root.config(menu=menu_bar)
+
+def main():
     global root
     root = tk.Tk()
     root.geometry("600x400")
@@ -228,14 +268,7 @@ def main():
     tk.Label(bottom_menu, text="Target Directory: ", font=DEFAULT_FONT).pack(side=tk.LEFT, padx=5)
     tk.Label(bottom_menu, textvariable=target_dir_var, font=DEFAULT_FONT).pack(side=tk.LEFT, padx=5)
 
-    menu_bar = tk.Menu(root)
-    file_menu = tk.Menu(menu_bar, tearoff=0)
-    file_menu.add_command(label="Add File", command=on_add_file)
-    file_menu.add_command(label="Delete Unsynced", command=delete_unsynced_files)
-    file_menu.add_separator()
-    file_menu.add_command(label="Settings", command=on_settings_click)
-    menu_bar.add_cascade(label="File", menu=file_menu)
-    root.config(menu=menu_bar)
+    create_menu_bar(root)
 
     global last_data_update
     last_data_update = 0

@@ -219,7 +219,7 @@ def create_menu_bar(root):
     menu_bar = tk.Menu(root)
 
     file_menu = tk.Menu(menu_bar, tearoff=0)
-    file_menu.add_command(label="Add File", command=on_add_file)
+    file_menu.add_command(label="Add Files", command=on_add_file)
     file_menu.add_command(label="Delete Unsynced", command=delete_unsynced_files)
     file_menu.add_separator()
     file_menu.add_command(label="Settings", command=on_settings_click)

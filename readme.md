@@ -10,6 +10,9 @@ Auto File Uploader is a lightweight event-based tool that automatically monitors
 - **Scheduled "LOGON" Task**: Listens to system events and copies files when updated.
 - **Simple Configuration**: Uses a JSON file for easy customization.
 
+
+![Auto Cloud Upload](media/screen-shots.gif)
+
 ## Installation (Windows)
 
 1. Run the installer script: `install.cmd`

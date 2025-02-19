@@ -29,14 +29,34 @@ def get_data():
         'path': path.join(config.target_dir, f['name'])
         }, files))
 
-def open_file(file_name):
-    file_path = path.join(config.target_dir, file_name)
-    helpers.open_file(file_path)
+def open_files(files):
+    for file in files:
+        file_path = path.join(config.target_dir, file)
+        helpers.open_file(file_path)
+
 
 def remove_files(files):
     global data_man
     with config.lock:
         data_man.remove_files(files)
+
+def delete_selected():
+    files = get_selected_files()
+    remove_files(files)
+    for file in files:
+        delete_file(path.join(config.target_dir, file))
+
+def handle_right_click(event):
+    current_item = synced_tree.identify_row(event.y)
+    if current_item and current_item not in synced_tree.selection():
+        synced_tree.selection_set(current_item)
+    menu = tk.Menu(root, tearoff=0)
+    menu.add_command(label="Add Files", command=on_add_file)
+    menu.add_command(label="Open", command=open_selected, state=tk.DISABLED if len(synced_tree.selection()) == 0 else tk.NORMAL)
+    menu.add_command(label="Remove", command=remove_selected, state=tk.DISABLED if len(synced_tree.selection()) == 0 else tk.NORMAL)
+    menu.add_command(label="Delete", command=delete_selected, state=tk.DISABLED if len(synced_tree.selection()) == 0 else tk.NORMAL)
+    menu.post(event.x_root, event.y_root)
+
 
 def refresh_table():
     global last_check
@@ -56,7 +76,7 @@ def create_table():
     def on_open_file(event):
         item = tree.identify_row(event.y)
         if item:
-            open_file(tree.item(item, "values")[0])
+            open_files([tree.item(item, "values")[0]])
 
     tree.bind("<Double-Button-1>", on_open_file)
     # if empty area is clicked, deselect all
@@ -65,15 +85,20 @@ def create_table():
         if not item:
             tree.selection_remove(tree.selection())
     tree.bind("<Button-1>", empty_click_handler)
+    tree.bind("<Button-3>", handle_right_click)
+
+
+def get_selected_files():
+    return [synced_tree.item(item, "values")[0] for item in synced_tree.selection()]
 
 def open_selected():
-    selected_files = [synced_tree.item(item, "values")[0] for item in synced_tree.selection()]
-    for file in selected_files:
-        open_file(file)
+    selected_files = get_selected_files()
+    open_files(selected_files)
 
 def remove_selected():
     selected_items = synced_tree.selection()
-    selected_files = [synced_tree.item(item, "values")[0] for item in selected_items]
+    selected_files = get_selected_files()
+
     remove_files(selected_files)
     for item in reversed(selected_items):
         synced_tree.delete(item)
@@ -149,14 +174,22 @@ def on_settings_click():
     handle_settings_request(root, config)
     refresh_table()
 
+def handle_escape(_):
+    if len(synced_tree.selection()) > 0:
+        synced_tree.selection_remove(synced_tree.selection())
+    else:
+        root.destroy()
+
 def main():
+
     global root
     root = tk.Tk()
     root.geometry("600x400")
     root.title("Auto-upload manager")
-    root.bind("<Escape>", lambda e: root.destroy())
+    root.bind("<Escape>", handle_escape)
     root.bind("<Delete>", lambda e: remove_selected())
     root.bind("<Return>", lambda e: open_selected())
+    root.bind("<Control-a>", lambda e: synced_tree.selection_set(synced_tree.get_children()))
 
     global target_dir_var
     target_dir_var = tk.StringVar()

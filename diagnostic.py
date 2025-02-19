@@ -82,8 +82,6 @@ def create_table():
     tree = synced_tree
     for row in data:
         tree.insert("", "end", values=(row["name"], row["timestamp"]))
-    tree.pack(fill=tk.BOTH, expand=True)
-
 
 def get_selected_files(tree):
     return [tree.item(item, "values")[0] for item in tree.selection()]
@@ -132,27 +130,6 @@ def empty_click_handler(event, tree):
         synced_tree.selection_remove(synced_tree.selection())
         unsynced_tree.selection_remove(unsynced_tree.selection())
 
-def create_synced_files_frame(window):
-    synced_files_frame = tk.Frame(window)
-    window.add(synced_files_frame)
-    synced_label = tk.Label(synced_files_frame, text="Synced Files", font=DEFAULT_FONT)
-    synced_label.pack()
-    
-    global synced_tree
-    synced_tree = ttk.Treeview(synced_files_frame, columns=("Name", "Timestamp"), show="headings")
-    synced_tree.heading("Name", text="Name")
-    synced_tree.heading("Timestamp", text="Timestamp")
-    synced_tree.column("Name", anchor="w")
-    synced_tree.column("Timestamp", anchor="w")
-
-    
-    synced_tree.bind("<Double-Button-1>", lambda e: on_open_file(synced_tree, e))
-    synced_tree.bind("<Button-1>", lambda e: empty_click_handler(e, synced_tree))
-    synced_tree.bind("<Button-3>", handle_synced_right_click)
-    synced_tree.bind("<<TreeviewSelect>>", lambda e: handle_tree_selection_event(e, unsynced_tree))
-
-    refresh_table()
-
 def handle_synced_right_click(event):
     unsynced_tree.selection_remove(unsynced_tree.selection())
     current_item = synced_tree.identify_row(event.y)
@@ -165,10 +142,8 @@ def handle_synced_right_click(event):
     menu.add_command(label="Delete file(s)", command=lambda: remove_and_delete_selected(synced_tree), state=tk.DISABLED if len(synced_tree.selection()) == 0 else tk.NORMAL)
     menu.post(event.x_root, event.y_root)
 
-
 def handle_unsynced_right_click(event):
     synced_tree.selection_remove(synced_tree.selection())
-
     current_item = unsynced_tree.identify_row(event.y)
     if current_item and current_item not in unsynced_tree.selection():
         unsynced_tree.selection_set(current_item)
@@ -178,25 +153,40 @@ def handle_unsynced_right_click(event):
     menu.add_command(label="Delete All", command=lambda: delete_unsynced_files(), state=tk.DISABLED if unsynced_tree.get_children() == () else tk.NORMAL)
     menu.post(event.x_root, event.y_root)
 
-
+def create_synced_files_frame(window):
+    synced_files_frame = tk.Frame(window)
+    window.add(synced_files_frame)
+    synced_label = tk.Label(synced_files_frame, text="Synced Files", font=DEFAULT_FONT)
+    synced_label.pack(pady=1)
+    
+    global synced_tree
+    synced_tree = ttk.Treeview(synced_files_frame, columns=("Name", "Timestamp"), show="headings")
+    synced_tree.pack(fill=tk.BOTH, expand=True)
+    synced_tree.heading("Name", text="Name")
+    synced_tree.heading("Timestamp", text="Timestamp")
+    synced_tree.column("Name", anchor="w")
+    synced_tree.column("Timestamp", anchor="w")
+    synced_tree.bind("<Double-Button-1>", lambda e: on_open_file(synced_tree, e))
+    synced_tree.bind("<Button-1>", lambda e: empty_click_handler(e, synced_tree))
+    synced_tree.bind("<Button-3>", handle_synced_right_click)
+    synced_tree.bind("<<TreeviewSelect>>", lambda e: handle_tree_selection_event(e, unsynced_tree))
+    refresh_table()
 
 def create_unsynced_files_frame(window):
     unsynced_files_frame = tk.Frame(window)
+    window.add(unsynced_files_frame, minsize=175)
     label = tk.Label(unsynced_files_frame, text="Unsynced Files", font=DEFAULT_FONT)
     label.pack(pady=1)
     
     global unsynced_tree
     unsynced_tree = ttk.Treeview(unsynced_files_frame, columns=("Name",), show="")
-    unsynced_tree.heading("Name", text="Name")
+    unsynced_tree.pack(fill=tk.BOTH, expand=True)
     unsynced_tree.column("Name", anchor="w")
     unsynced_tree.bind("<Button-3>", handle_unsynced_right_click)
     unsynced_tree.bind("<<TreeviewSelect>>", lambda e: handle_tree_selection_event(e, synced_tree))
     unsynced_tree.bind("<Double-Button-1>", lambda e: on_open_file(unsynced_tree, e))
     unsynced_tree.bind("<Button-1>", lambda e: empty_click_handler(e, unsynced_tree))
-
-    unsynced_tree.pack(fill=tk.BOTH, expand=True)
     refresh_unsynced_files()
-    window.add(unsynced_files_frame, minsize=175)
 
 def on_settings_click():
     handle_settings_request(root, config)

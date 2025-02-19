@@ -153,7 +153,7 @@ def main():
     global root
     root = tk.Tk()
     root.geometry("600x400")
-    root.title("Auto-upload manager")
+    root.title("Auto File Uploader")
     root.bind("<Escape>", lambda e: root.destroy())
     root.bind("<Delete>", lambda e: remove_selected())
     root.bind("<Return>", lambda e: open_selected())

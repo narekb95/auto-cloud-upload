@@ -124,7 +124,13 @@ class DataFileObserver:
         time.sleep(self.postpone_period)
         self.file_manager.update_files()
 
+    last_data_update = 0
+    data_update_period = 1
     def on_data_update(self, _):
+        if(time.time() - self.last_data_update < self.data_update_period):
+            return
+        self.last_data_update = time.time()
+        time.sleep(self.data_update_period)
         print('Data file updated')
         self.file_manager.read_data()
         new_files = [os.path.normpath(file['path']) for file in self.file_manager.files]

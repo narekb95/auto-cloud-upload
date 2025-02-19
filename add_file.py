@@ -33,7 +33,7 @@ def add_files(rows, data_man):
             continue
         file = next((file for file in data_man.files if file['name'].lower() == name), None)
         if file is not None:
-            row.err_var.set(f'File {name} already exists in auto-upload.')
+            row.err_var.set(f'Name is already in use for the file at "{shorten_path(file["path"])}".')
             continue
         
         added_files.append({'path': path, 'name': name})
@@ -50,30 +50,33 @@ def remove_removed_rows(rows):
             row.path_label.destroy()
             row.remove_button.destroy()
     rows = [row for row in rows if not row.removed]
+    add_rows_to_grid(rows)
+    return rows
+
+def add_rows_to_grid(rows):
     for i, row in enumerate(rows):
+        pady = (20, 0) if i == 0 else (10, 0)
         row.index = i
-        row.name_entry.grid(row=i, column=0, padx=5, pady=5, sticky="w")
-        row.path_label.grid(row=i, column=1, padx=5, pady=5, sticky="ew")
-        row.remove_button.grid(row=i, column=2, padx=5, pady=5)
+        row.name_entry.grid(row=2*i,    column=0, padx=(10,5), pady=pady, sticky="w")
+        row.path_label.grid(row=2*i,    column=1, padx=5,      pady=pady, sticky="ew")
+        row.remove_button.grid(row=2*i, column=2, padx=(5,10), pady=pady)
+        row.err_label.grid(row=2*i+1, column=0, columnspan=3, padx = 10, sticky="w")
     return rows
             
 
 def open_add_file_dialog(dialog, files, config, data_man):    
     class Row:
-        def __init__(self, file, index, root):
+        def __init__(self, file, root):
             self.file = file
             self.removed = False
             self.err_var = tk.StringVar(value='')
             self.display_path = tk.StringVar(value=shorten_path(file.path.get()))
 
             self.name_entry = tk.Entry(root, textvariable=file.name, font=("Arial", 10), width=30)
-            self.name_entry.grid(row=index, column=0, padx=5, pady=5, sticky="w")
-
             self.path_label = tk.Label(root, textvariable=self.display_path, font=("Arial", 9), anchor="w", wraplength=400)
-            self.path_label.grid(row=index, column=1, padx=5, pady=5, sticky="ew")
-
             self.remove_button = tk.Button(root, text="❌", font=("Arial", 6, ), fg="red", command=self.remove)
-            self.remove_button.grid(row=index, column=2, padx=5, pady=5)
+            self.err_label = tk.Label(root, textvariable=self.err_var, font=("Arial", 9), fg="red")
+
 
         def remove(self):
             self.name_entry.destroy()
@@ -85,7 +88,8 @@ def open_add_file_dialog(dialog, files, config, data_man):
     dialog.grid_columnconfigure(0, weight=0)
     dialog.grid_columnconfigure(1, weight=1)
     dialog.grid_columnconfigure(2, weight=0)
-    rows = [Row(file, i, dialog) for i, file in enumerate(files)]
+    rows = [Row(file, dialog) for i, file in enumerate(files)]
+    add_rows_to_grid(rows)
     rows[0].name_entry.focus_set()
     rows[0].name_entry.selection_range(0, tk.END)
 
@@ -99,8 +103,12 @@ def open_add_file_dialog(dialog, files, config, data_man):
         paths = filedialog.askopenfilenames()
         files = [SyncFile(path, get_name_without_extension(path))\
             for path in paths]
+        current_start_index = len(rows)
         for file in files:
-            rows.append(Row(file, len(rows), dialog))
+            rows.append(Row(file, dialog))
+        add_rows_to_grid(rows)
+        rows[current_start_index].name_entry.focus_set()
+        rows[current_start_index].name_entry.selection_range(0, tk.END)
         pack_buttons()
                 
     add_files_button = tk.Button(dialog, text="Add files", font=("Ariel", 9), command=add_more_files)
@@ -108,8 +116,8 @@ def open_add_file_dialog(dialog, files, config, data_man):
 
     
     def pack_buttons():
-        add_files_button.grid(row=len(rows), column=0, columnspan=3, pady=10)
-        submit_button.grid(row=len(rows)+1,column=0, columnspan=3, padx=20, pady=10, sticky="e")
+        add_files_button.grid(row=2*len(rows), column=0, columnspan=3, pady=10)
+        submit_button.grid(row=2*len(rows)+1,column=0, columnspan=3, padx=20, pady=10, sticky="e")
     pack_buttons()
 
     dialog.bind('<Return>', lambda _, rows=rows, config=config : on_submit(rows, data_man))

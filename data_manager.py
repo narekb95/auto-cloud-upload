@@ -41,8 +41,7 @@ class DataManager:
         self.update_files()
 
     def update_target_dir(self, target_dir):
-        if self.target_dir == target_dir:
-            return
+        assert self.target_dir != target_dir
         self.target_dir = target_dir
         self.reset_files()
 
@@ -125,7 +124,13 @@ class DataFileObserver:
         time.sleep(self.postpone_period)
         self.file_manager.update_files()
 
+    last_data_update = 0
+    data_update_period = 1
     def on_data_update(self, _):
+        if(time.time() - self.last_data_update < self.data_update_period):
+            return
+        self.last_data_update = time.time()
+        time.sleep(self.data_update_period)
         print('Data file updated')
         self.file_manager.read_data()
         new_files = [os.path.normpath(file['path']) for file in self.file_manager.files]
@@ -140,10 +145,19 @@ class DataFileObserver:
             print('list of files changed')
             self.files = new_files
             self.file_watcher.update_files(self.files)
-        
+
+    last_config_update = 0        
     def on_config_update(self, _):
-        self.postpone_period = Config().postpone_period
-        self.file_manager.update_target_dir(self.config.target_dir)
+        if(time.time() - self.last_config_update < .5):
+            return
+        self.last_config_update = time.time()
+        time.sleep(.5)
+        print('Config file updated')
+        old_target = self.config.target_dir
+        self.config.read_config()
+        self.postpone_period = self.config.postpone_period
+        if old_target != self.config.target_dir:
+            self.file_manager.update_target_dir(self.config.target_dir)
         
 
 def main():

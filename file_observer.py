@@ -5,7 +5,7 @@ from threading import Thread
 
 from os import path
 
-class FolderChangeHandler(FileSystemEventHandler):
+class FolderDeletionHandler(FileSystemEventHandler):
     def __init__(self, folder, callback):
         super().__init__()
         self.callback = callback
@@ -13,12 +13,13 @@ class FolderChangeHandler(FileSystemEventHandler):
         self.update_watched_dirs(folder)
 
 
-    def update_watched_dirs(self, folder):        
+    def update_watched_dirs(self, folder):
+        folder = path.normpath(folder)    
         self.observer.unschedule_all()
         self.folder = folder
         self.observer.schedule(self, path=self.folder, recursive=False)
 
-    def on_modified(self, event):
+    def on_deleted(self, event):
         Thread(target=self.callback, args=(event.src_path,)).start()
 
     def start(self):

@@ -66,6 +66,13 @@ def refresh_table():
     target_dir_var.set(config.target_dir)
     refresh_unsynced_files()
 
+
+
+def on_open_file(tree, event):
+    item = tree.identify_row(event.y)
+    if item:
+        open_files([tree.item(item, "values")[0]])
+
 def create_table():
     data = get_data()
     tree = synced_tree
@@ -73,12 +80,8 @@ def create_table():
         tree.insert("", "end", values=(row["name"], row["timestamp"]))
     tree.pack(fill=tk.BOTH, expand=True)
 
-    def on_open_file(event):
-        item = tree.identify_row(event.y)
-        if item:
-            open_files([tree.item(item, "values")[0]])
 
-    tree.bind("<Double-Button-1>", on_open_file)
+    tree.bind("<Double-Button-1>", lambda e: on_open_file(synced_tree, e))
     # if empty area is clicked, deselect all
     def empty_click_handler(event):
         item = tree.identify_row(event.y)
@@ -118,11 +121,10 @@ def delete_unsynced_files():
 
 def refresh_unsynced_files():
     global config, data_man
-    listbox.delete(0, tk.END)
+    unsynced_tree.delete(*unsynced_tree.get_children())
     dir, unsynced_files = get_unsynced_files(config, data_man)
     for file in unsynced_files:
-        listbox.insert(tk.END, file)
-
+        unsynced_tree.insert("", "end", values=(file,))
 
 def on_add_file():
     try:
@@ -131,25 +133,14 @@ def on_add_file():
         print(e)
     refresh_table()
 
-def build_toolbar(toolbar):
-    label = tk.Label(toolbar, text="Synced Files", font=('Arial', 8))
-    label.pack(side=tk.LEFT, pady=1)
-    btn_remove = tk.Button(toolbar, text="❌", font=("Arial", 6, "bold"), fg="red", command=remove_selected)
-    btn_remove.pack(side=tk.RIGHT, padx=5)
-    btn_add = tk.Button(toolbar, text="➕", font=("Arial", 6, "bold"), fg="green", command=on_add_file)
-    btn_add.pack(side=tk.RIGHT, padx=5)
-
 def create_synced_files_frame(window):
     synced_files_frame = tk.Frame(window)
     window.add(synced_files_frame)
-    
-    toolbar = tk.Frame(synced_files_frame, relief=tk.RAISED, bd=2)
-    toolbar.pack(fill=tk.X)
-    build_toolbar(toolbar)
+    synced_label = tk.Label(synced_files_frame, text="Synced Files", font=DEFAULT_FONT)
+    synced_label.pack()
     
     global synced_tree
     synced_tree = ttk.Treeview(synced_files_frame, columns=("Name", "Timestamp"), show="headings")
-    
     synced_tree.heading("Name", text="Name")
     synced_tree.heading("Timestamp", text="Timestamp")
     synced_tree.column("Name", anchor="w")
@@ -157,16 +148,18 @@ def create_synced_files_frame(window):
     refresh_table()
 
 def create_unsynced_files_frame(window):
-    global listbox
     unsynced_files_frame = tk.Frame(window)
-
-    label_frame = tk.Frame(unsynced_files_frame, relief=tk.RAISED, bd=2)
-    label_frame.pack(fill=tk.X)
-    label = tk.Label(label_frame, text="Unsynced Files", font=('Arial', 8))
+    label = tk.Label(unsynced_files_frame, text="Unsynced Files", font=DEFAULT_FONT)
     label.pack(pady=1)
     
-    listbox = tk.Listbox(unsynced_files_frame, font=DEFAULT_FONT)
-    listbox.pack(fill=tk.BOTH, expand=True)
+    global unsynced_tree
+    unsynced_tree = ttk.Treeview(unsynced_files_frame, columns=("Name",), show="")
+    unsynced_tree.heading("Name", text="Name")
+    unsynced_tree.column("Name", anchor="w")
+    # unsynced_tree.bind("<Button-1>", lambda e: "break")
+    unsynced_tree.bind("<Double-Button-1>", lambda e: on_open_file(unsynced_tree, e))
+
+    unsynced_tree.pack(fill=tk.BOTH, expand=True)
     refresh_unsynced_files()
     window.add(unsynced_files_frame, minsize=175)
 

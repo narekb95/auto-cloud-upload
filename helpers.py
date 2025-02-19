@@ -11,14 +11,8 @@ def read_arg(target : str, argv):
     return arg.split('=')[1] if arg != None else None
 
 def timestamp_to_date(ts):
-    return datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d  %H:%M:%S')
+    return datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d  %H:%M')
 
-
-def file_exists_and_changed(self, last_check, file):
-    if not os.path.isfile(file):
-        return False
-    time = os.path.getmtime(file)
-    return time > last_check
 
 def open_file(path):
     if os.path.exists(path):

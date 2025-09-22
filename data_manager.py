@@ -29,6 +29,7 @@ class DataManager:
             self.read_data()
             for file in files:
                 file['last-update'] = 0
+                file['deleted'] = False
                 self.files.append(file)
             self.write_data()
         self.update_files()
@@ -62,6 +63,33 @@ class DataManager:
         with open(_data_file, 'w') as f:
             json.dump({'files': self.files}, f)
 
+    def check_folders_exist(self):
+        """Check if folders for each file still exist and update deleted flags"""
+        with self.lock:
+            self.read_data()
+            files_updated = False
+            for file in self.files:
+                path = file['path']
+                folder = os.path.dirname(path)
+                file_exists = os.path.exists(path)
+                folder_exists = os.path.exists(folder)
+                
+                # If folder doesn't exist or file doesn't exist, mark as deleted
+                if not folder_exists or not file_exists:
+                    if not file.get('deleted', False):
+                        file['deleted'] = True
+                        files_updated = True
+                        print(f"Marked file as deleted: {file['name']} (folder exists: {folder_exists}, file exists: {file_exists})")
+                else:
+                    # If folder and file exist, mark as not deleted
+                    if file.get('deleted', False):
+                        file['deleted'] = False
+                        files_updated = True
+                        print(f"Restored file: {file['name']}")
+            
+            if files_updated:
+                self.write_data()
+    
     def update_files(self):
         def file_exists_and_changed(last_check, file):
             if not os.path.isfile(file):
@@ -76,6 +104,10 @@ class DataManager:
 
             files_updated = False
             for file in self.files:
+                # Skip deleted files
+                if file.get('deleted', False):
+                    continue
+                    
                 path = file['path']
                 name = file['name']
                 file_last_update = file['last-update']
@@ -98,7 +130,11 @@ class DataFileObserver:
         self.data_watcher = FileChangeHandler([_data_file], self.on_data_update)
         self.config_watcher = FileChangeHandler([get_config_file()], self.on_config_update)
 
-        self.files = [os.path.normpath(file['path']) for file in self.file_manager.files]
+        # Check folder existence before setting up file watchers
+        self.file_manager.check_folders_exist()
+        
+        # Only watch files that are not marked as deleted
+        self.files = [os.path.normpath(file['path']) for file in self.file_manager.files if not file.get('deleted', False)]
         self.file_watcher = FileChangeHandler(self.files, self.on_file_update)
 
     def run(self):
@@ -132,8 +168,13 @@ class DataFileObserver:
         self.last_data_update = time.time()
         time.sleep(self.data_update_period)
         print('Data file updated')
+        
+        # Check folder existence when data is updated
+        self.file_manager.check_folders_exist()
+        
         self.file_manager.read_data()
-        new_files = [os.path.normpath(file['path']) for file in self.file_manager.files]
+        # Only include non-deleted files
+        new_files = [os.path.normpath(file['path']) for file in self.file_manager.files if not file.get('deleted', False)]
         changed = False
         for file in new_files:
             if file not in self.files:

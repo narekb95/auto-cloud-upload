@@ -22,11 +22,22 @@ config = Config()
 data_man : DataManager = DataManager(config.target_dir)
 
 def get_data():
-    files = sorted(data_man.files, key=lambda f: f['last-update'] if 'last-update' in f else 0, reverse=True)
+    # Separate deleted and non-deleted files
+    non_deleted_files = [f for f in data_man.files if not f.get('deleted', False)]
+    deleted_files = [f for f in data_man.files if f.get('deleted', False)]
+    
+    # Sort each group by last-update (most recent first)
+    non_deleted_files = sorted(non_deleted_files, key=lambda f: f['last-update'] if 'last-update' in f else 0, reverse=True)
+    deleted_files = sorted(deleted_files, key=lambda f: f['last-update'] if 'last-update' in f else 0, reverse=True)
+    
+    # Combine: non-deleted first, then deleted
+    files = non_deleted_files + deleted_files
+    
     return list(map(lambda f: {
         'name': f['name'],
         'timestamp': timestamp_to_date(f['last-update']) if 'last-update' in f else 'N/A',
-        'path': path.join(config.target_dir, f['name'])
+        'path': path.join(config.target_dir, f['name']),
+        'deleted': f.get('deleted', False)
         }, files))
 
 def open_files(files):
@@ -80,8 +91,11 @@ def on_open_file(tree, event):
 def create_table():
     data = get_data()
     tree = synced_tree
+    
     for row in data:
-        tree.insert("", "end", values=(row["name"], row["timestamp"]))
+        # Use different tags based on deleted status
+        tag = "deleted" if row.get("deleted", False) else "normal"
+        tree.insert("", "end", values=(row["name"], row["timestamp"]), tags=(tag,))
 
 def get_selected_files(tree):
     return [tree.item(item, "values")[0] for item in tree.selection()]
@@ -166,6 +180,11 @@ def create_synced_files_frame(window):
     synced_tree.heading("Timestamp", text="Timestamp")
     synced_tree.column("Name", anchor="w")
     synced_tree.column("Timestamp", anchor="w")
+    
+    # Configure tags for styling
+    synced_tree.tag_configure("deleted", foreground="grey")
+    synced_tree.tag_configure("normal", foreground="black")
+    
     synced_tree.bind("<Double-Button-1>", lambda e: on_open_file(synced_tree, e))
     synced_tree.bind("<Button-1>", lambda e: empty_click_handler(e, synced_tree))
     synced_tree.bind("<Button-3>", handle_synced_right_click)

@@ -12,6 +12,7 @@ _config_file = os.path.join(helpers.App_Data, _config_file_name)
 DEFAULT_CONFIG = {    
             "last-update": 0,
             "postpone-period": .2,
+            "folder-deleted": False,
         }
 
 def get_default_config(target_folder):
@@ -59,6 +60,7 @@ class Config:
         self.target_dir = config['target']
         self.last_update = config['last-update']
         self.postpone_period = config.get('postpone-period')
+        self.folder_deleted = config.get('folder-deleted', False)
 
 
     # Only call if something really changed
@@ -69,5 +71,12 @@ class Config:
             json.dump({
                 'target': self.target_dir,
                 'last-update': self.last_update,
-                'postpone-period': self.postpone_period
+                'postpone-period': self.postpone_period,
+                'folder-deleted': self.folder_deleted
             }, f)
+
+    def set_folder_deleted(self, deleted=True):
+        """Update the folder deletion status and save to config"""
+        with self.lock:
+            self.folder_deleted = deleted
+            self.update_config()
